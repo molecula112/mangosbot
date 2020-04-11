@@ -14859,7 +14859,7 @@ void Player::_LoadInventory(QueryResult* result, uint32 timediff)
 			std::string content = GetSession()->GetMangosString(LANG_NOT_EQUIPPED_ITEM);
             // fill mail
             MailDraft draft(subject);
-			draft.SetSubjectAndBody(subject,content); 
+			draft.SetSubjectAndBody(subject,content);
             for (int i = 0; !problematicItems.empty() && i < MAX_MAIL_ITEMS; ++i)
             {
                 Item* item = problematicItems.front();
@@ -15672,6 +15672,10 @@ void Player::SaveToDB()
     // save pet (hunter pet level and experience and all type pets health/mana).
     if (Pet* pet = GetPet())
         { pet->SavePetToDB(PET_SAVE_AS_CURRENT); }
+
+#ifdef ENABLE_PLAYERBOTS
+    if (m_playerbotAI) sPlayerbotDbStore.Save(m_playerbotAI);
+#endif
 }
 
 // fast save function for item/money cheating preventing - save only inventory and money state
