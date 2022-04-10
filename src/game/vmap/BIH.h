@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -153,11 +153,15 @@ class BIH
             BuildStats stats;
             buildHierarchy(tempTree, dat, stats);
             if (printStats)
-                { stats.printStats(); }
+            {
+                stats.printStats();
+            }
 
             objects.resize(dat.numPrims);
             for (uint32 i = 0; i < dat.numPrims; ++i)
-                { objects[i] = dat.indices[i]; }
+            {
+                objects[i] = dat.indices[i];
+            }
             // nObjects = dat.numPrims;
             tree = tempTree;
             delete[] dat.primBound;
@@ -194,20 +198,30 @@ class BIH
                     float t1 = (bounds.low()[i]  - org[i]) * invDir[i];
                     float t2 = (bounds.high()[i] - org[i]) * invDir[i];
                     if (t1 > t2)
-                        { std::swap(t1, t2); }
+                    {
+                        std::swap(t1, t2);
+                    }
                     if (t1 > intervalMin)
-                        { intervalMin = t1; }
+                    {
+                        intervalMin = t1;
+                    }
                     if (t2 < intervalMax || intervalMax < 0.f)
-                        { intervalMax = t2; }
+                    {
+                        intervalMax = t2;
+                    }
                     // intervalMax can only become smaller for other axis,
                     //  and intervalMin only larger respectively, so stop early
                     if (intervalMax <= 0 || intervalMin >= maxDist)
-                        { return; }
+                    {
+                        return;
+                    }
                 }
             }
 
             if (intervalMin > intervalMax)
-                { return; }
+            {
+                return;
+            }
             intervalMin = std::max(intervalMin, 0.f);
             intervalMax = std::min(intervalMax, maxDist);
 
@@ -250,7 +264,9 @@ class BIH
                             float tb = (intBitsToFloat(tree[node + offsetBack[axis]]) - org[axis]) * invDir[axis];
                             // ray passes between clip zones
                             if (tf < intervalMin && tb > intervalMax)
-                                { break; }
+                            {
+                                break;
+                            }
                             int back = offset + offsetBack3[axis];
                             node = back;
                             // ray passes through far node only
@@ -283,7 +299,10 @@ class BIH
                             while (n > 0)
                             {
                                 bool hit = intersectCallback(r, objects[offset], maxDist, stopAtFirst);
-                                if (stopAtFirst && hit) { return; }
+                                if (stopAtFirst && hit)
+                                {
+                                    return;
+                                }
                                 --n;
                                 ++offset;
                             }
@@ -293,14 +312,18 @@ class BIH
                     else
                     {
                         if (axis > 2)
-                            { return; } // should not happen
+                        {
+                            return;  // should not happen
+                        }
                         float tf = (intBitsToFloat(tree[node + offsetFront[axis]]) - org[axis]) * invDir[axis];
                         float tb = (intBitsToFloat(tree[node + offsetBack[axis]]) - org[axis]) * invDir[axis];
                         node = offset;
                         intervalMin = (tf >= intervalMin) ? tf : intervalMin;
                         intervalMax = (tb <= intervalMax) ? tb : intervalMax;
                         if (intervalMin > intervalMax)
-                            { break; }
+                        {
+                            break;
+                        }
                         continue;
                     }
                 } // traversal loop
@@ -308,12 +331,16 @@ class BIH
                 {
                     // stack is empty?
                     if (stackPos == 0)
-                        { return; }
+                    {
+                        return;
+                    }
                     // move back up the stack
                     --stackPos;
                     intervalMin = stack[stackPos].tnear;
                     if (maxDist < intervalMin)
-                        { continue; }
+                    {
+                        continue;
+                    }
                     node = stack[stackPos].node;
                     intervalMax = stack[stackPos].tfar;
                     break;
@@ -332,7 +359,9 @@ class BIH
         void intersectPoint(const Vector3& p, IsectCallback& intersectCallback) const
         {
             if (!bounds.contains(p))
-                { return; }
+            {
+                return;
+            }
 
             StackNode stack[MAX_STACK_SIZE];
             int stackPos = 0;
@@ -355,7 +384,9 @@ class BIH
                             float tr = intBitsToFloat(tree[node + 2]);
                             // point is between clip zones
                             if (tl < p[axis] && tr > p[axis])
-                                { break; }
+                            {
+                                break;
+                            }
                             int right = offset + 3;
                             node = right;
                             // point is in right node only
@@ -391,19 +422,25 @@ class BIH
                     else // BVH2 node (empty space cut off left and right)
                     {
                         if (axis > 2)
-                            { return; } // should not happen
+                        {
+                            return;  // should not happen
+                        }
                         float tl = intBitsToFloat(tree[node + 1]);
                         float tr = intBitsToFloat(tree[node + 2]);
                         node = offset;
                         if (tl > p[axis] || tr < p[axis])
-                            { break; }
+                        {
+                            break;
+                        }
                         continue;
                     }
                 } // traversal loop
 
                 // stack is empty?
                 if (stackPos == 0)
-                    { return; }
+                {
+                    return;
+                }
                 // move back up the stack
                 --stackPos;
                 node = stack[stackPos].node;
@@ -480,7 +517,10 @@ class BIH
                     maxObjects(0xFFFFFFFF), sumDepth(0), minDepth(0x0FFFFFFF),
                     maxDepth(0xFFFFFFFF), numBVH2(0)
                 {
-                    for (int i = 0; i < 6; ++i) { numLeavesN[i] = 0; }
+                    for (int i = 0; i < 6; ++i)
+                    {
+                        numLeavesN[i] = 0;
+                    }
                 }
 
                 /**

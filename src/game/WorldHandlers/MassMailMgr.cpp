@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,11 +46,13 @@ void MassMailMgr::AddMassMailTask(MailDraft* mailProto, const MailSender &sender
     if (RACEMASK_ALL_PLAYABLE & ~raceMask)                  // have races not included in mask
     {
         std::ostringstream ss;
-        ss << "SELECT guid FROM characters WHERE (1 << (race - 1)) & " << raceMask << " AND deleteDate IS NULL";
+        ss << "SELECT `guid` FROM `characters` WHERE (1 << (`race` - 1)) & " << raceMask << " AND `deleteDate` IS NULL";
         AddMassMailTask(mailProto, sender, ss.str().c_str());
     }
     else
-        { AddMassMailTask(mailProto, sender, "SELECT guid FROM characters WHERE deleteDate IS NULL"); }
+    {
+        AddMassMailTask(mailProto, sender, "SELECT `guid` FROM `characters` WHERE `deleteDate` IS NULL");
+    }
 }
 
 struct MassMailerQueryHandler
@@ -58,7 +60,9 @@ struct MassMailerQueryHandler
     void HandleQueryCallback(QueryResult* result, MailDraft* mailProto, MailSender sender)
     {
         if (!result)
-            { return; }
+        {
+            return;
+        }
 
         MassMailMgr::ReceiversList& recievers = sMassMailMgr.AddMassMailTask(mailProto, sender);
 
@@ -80,7 +84,9 @@ void MassMailMgr::AddMassMailTask(MailDraft* mailProto, const MailSender &sender
 void MassMailMgr::Update(bool sendall /*= false*/)
 {
     if (m_massMails.empty())
-        { return; }
+    {
+        return;
+    }
 
     uint32 maxcount = sWorld.getConfig(CONFIG_UINT32_MASS_MAILER_SEND_PER_TICK);
 
@@ -103,7 +109,9 @@ void MassMailMgr::Update(bool sendall /*= false*/)
                 task.m_protoMail->SendMailTo(MailReceiver(receiver, receiver_guid), task.m_sender, MAIL_CHECK_MASK_RETURNED);
 
                 if (!sendall)
-                    { --maxcount; }
+                {
+                    --maxcount;
+                }
                 break;
             }
 
@@ -115,11 +123,15 @@ void MassMailMgr::Update(bool sendall /*= false*/)
             draft.SendMailTo(MailReceiver(receiver, receiver_guid), task.m_sender, MAIL_CHECK_MASK_RETURNED);
 
             if (!sendall)
-                { --maxcount; }
+            {
+                --maxcount;
+            }
         }
 
         if (task.m_receivers.empty())
-            { m_massMails.pop_front(); }
+        {
+            m_massMails.pop_front();
+        }
     }
     while (!m_massMails.empty() && (sendall || maxcount > 0));
 }
@@ -130,7 +142,9 @@ void MassMailMgr::GetStatistic(uint32& tasks, uint32& mails, uint32& needTime) c
 
     uint32 mailsCount = 0;
     for (MassMailList::const_iterator mailItr = m_massMails.begin(); mailItr != m_massMails.end(); ++mailItr)
-        { mailsCount += mailItr->m_receivers.size(); }
+    {
+        mailsCount += mailItr->m_receivers.size();
+    }
 
     mails = mailsCount;
 

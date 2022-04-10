@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -134,6 +134,7 @@ enum eConfigUInt32Values
     CONFIG_UINT32_GM_LEVEL_IN_WHO_LIST,
     CONFIG_UINT32_START_GM_LEVEL,
     CONFIG_UINT32_GM_INVISIBLE_AURA,
+    CONFIG_UINT32_GM_MAX_SPEED_FACTOR,
     CONFIG_UINT32_GROUP_VISIBILITY,
     CONFIG_UINT32_MAIL_DELIVERY_DELAY,
     CONFIG_UINT32_MASS_MAILER_SEND_PER_TICK,
@@ -172,6 +173,7 @@ enum eConfigUInt32Values
     CONFIG_UINT32_BATTLEGROUND_PREMATURE_FINISH_TIMER,
     CONFIG_UINT32_BATTLEGROUND_PREMADE_GROUP_WAIT_FOR_MATCH,
     CONFIG_UINT32_BATTLEGROUND_QUEUE_ANNOUNCER_JOIN,
+    CONFIG_UNIT32_GUILD_PETITION_COST,
     CONFIG_UINT32_GUILD_EVENT_LOG_COUNT,
     CONFIG_UINT32_TIMERBAR_FATIGUE_GMLEVEL,
     CONFIG_UINT32_TIMERBAR_FATIGUE_MAX,
@@ -188,6 +190,7 @@ enum eConfigUInt32Values
     CONFIG_UINT32_GUID_RESERVE_SIZE_CREATURE,
     CONFIG_UINT32_GUID_RESERVE_SIZE_GAMEOBJECT,
     CONFIG_UINT32_CREATURE_RESPAWN_AGGRO_DELAY,
+    CONFIG_UINT32_MAX_WHOLIST_RETURNS,
     CONFIG_UINT32_LOG_WHISPERS,
     // Warden
     CONFIG_UINT32_WARDEN_CLIENT_RESPONSE_DELAY,
@@ -340,6 +343,7 @@ enum eConfigBoolValues
     CONFIG_BOOL_ELUNA_ENABLED,
     CONFIG_BOOL_PLAYER_COMMANDS,
     CONFIG_BOOL_AUTOPOOLING_MINING_ENABLE,
+    // Warden
     CONFIG_BOOL_WARDEN_WIN_ENABLED,
     CONFIG_BOOL_WARDEN_OSX_ENABLED,
     CONFIG_BOOL_GM_TICKET_OFFLINE_CLOSING,
@@ -558,7 +562,7 @@ class World
         // for max speed access
         static float GetMaxVisibleDistanceOnContinents()    { return m_MaxVisibleDistanceOnContinents; }
         static float GetMaxVisibleDistanceInInstances()     { return m_MaxVisibleDistanceInInstances;  }
-        static float GetMaxVisibleDistanceInBG()            { return m_MaxVisibleDistanceInBG;         }
+        static float GetMaxVisibleDistanceInBGArenas()      { return m_MaxVisibleDistanceInBGArenas;   }
 
         static float GetMaxVisibleDistanceInFlight()        { return m_MaxVisibleDistanceInFlight;    }
         static float GetVisibleUnitGreyDistance()           { return m_VisibleUnitGreyDistance;       }
@@ -665,7 +669,7 @@ class World
         // for max speed access
         static float m_MaxVisibleDistanceOnContinents;
         static float m_MaxVisibleDistanceInInstances;
-        static float m_MaxVisibleDistanceInBG;
+        static float m_MaxVisibleDistanceInBGArenas;
 
         static float m_MaxVisibleDistanceInFlight;
         static float m_VisibleUnitGreyDistance;

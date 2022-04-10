@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,7 +44,9 @@ struct MapID
     bool operator<(const MapID& val) const
     {
         if (nMapId == val.nMapId)
-            { return nInstanceId < val.nInstanceId; }
+        {
+            return nInstanceId < val.nInstanceId;
+        }
 
         return nMapId < val.nMapId;
     }
@@ -76,15 +78,21 @@ class MapManager : public MaNGOS::Singleton<MapManager, MaNGOS::ClassLevelLockab
         void SetGridCleanUpDelay(uint32 t)
         {
             if (t < MIN_GRID_DELAY)
-                { i_gridCleanUpDelay = MIN_GRID_DELAY; }
+            {
+                i_gridCleanUpDelay = MIN_GRID_DELAY;
+            }
             else
-                { i_gridCleanUpDelay = t; }
+            {
+                i_gridCleanUpDelay = t;
+            }
         }
 
         void SetMapUpdateInterval(uint32 t)
         {
             if (t > MIN_MAP_UPDATE_DELAY)
-                { t = MIN_MAP_UPDATE_DELAY; }
+            {
+                t = MIN_MAP_UPDATE_DELAY;
+            }
 
             i_timer.SetInterval(t);
             i_timer.Reset();
@@ -194,7 +202,9 @@ inline void MapManager::DoForAllMapsWithMapId(uint32 mapId, Do& _do)
     MapMapType::const_iterator start = i_maps.lower_bound(MapID(mapId, 0));
     MapMapType::const_iterator end   = i_maps.lower_bound(MapID(mapId + 1, 0));
     for (MapMapType::const_iterator itr = start; itr != end; ++itr)
-        { _do(itr->second); }
+    {
+        _do(itr->second);
+    }
 }
 
 #define sMapMgr MapManager::Instance()

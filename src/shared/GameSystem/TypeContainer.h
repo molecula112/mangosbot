@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -144,9 +144,13 @@ class TypeUnorderedMapContainer
             auto&& _element = std::get<Meta::IndexOf<T,Tuple>::value>(i_container);
             auto&& iter = _element.find(handle);
             if (iter == _element.end())
-              { return nullptr; }
+            {
+                return nullptr;
+            }
             else
-              { return iter->second; }
+            {
+                return iter->second;
+            }
         }
 
     private:
@@ -165,7 +169,7 @@ class TypeMapContainer
 
     public:
         template <typename T>
-        size_t count(T*) const 
+        size_t count(T*) const
         {
             return std::get<Meta::IndexOf<T,Tuple>::value>(i_container).getSize();
         }

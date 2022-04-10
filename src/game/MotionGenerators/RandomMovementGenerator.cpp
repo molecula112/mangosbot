@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@
 #include "movement/MoveSpline.h"
 
 template<>
-RandomMovementGenerator<Creature>::RandomMovementGenerator(float x, float y, float z, float radius, float verticalZ) : 
+RandomMovementGenerator<Creature>::RandomMovementGenerator(float x, float y, float z, float radius, float verticalZ) :
     i_nextMoveTime(0), i_x(x), i_y(y), i_z(z), i_radius(radius), i_verticalZ(verticalZ)
 {
     if (radius < 0.1f)
@@ -45,7 +45,7 @@ RandomMovementGenerator<Creature>::RandomMovementGenerator(const Creature& creat
 {
     float respX, respY, respZ, respO, wander_distance;
     creature.GetRespawnCoord(respX, respY, respZ, &respO, &wander_distance);
-    i_nextMoveTime = ShortTimeTracker(0);
+    i_nextMoveTime = TimeTracker(0);
     i_x = respX;
     i_y = respY;
     i_z = respZ;
@@ -69,12 +69,18 @@ void RandomMovementGenerator<Creature>::_setRandomLocation(Creature& creature)
         init.SetWalk(true);
         init.Launch();
         if (roll_chance_i(MOVEMENT_RANDOM_MMGEN_CHANCE_NO_BREAK))
+        {
             i_nextMoveTime.Reset(50);
+        }
         else
+        {
             i_nextMoveTime.Reset(urand(3000, 10000));       // Keep a short wait time
+        }
     }
     else
+    {
         i_nextMoveTime.Reset(50);                           // Retry later
+    }
     return;
 }
 
@@ -84,7 +90,9 @@ void RandomMovementGenerator<Creature>::Initialize(Creature& creature)
     creature.addUnitState(UNIT_STAT_ROAMING);               // _MOVE set in _setRandomLocation
 
     if (!creature.IsAlive() || creature.hasUnitState(UNIT_STAT_NOT_MOVE))
-        { return; }
+    {
+        return;
+    }
 
     _setRandomLocation(creature);
 }
@@ -124,7 +132,9 @@ bool RandomMovementGenerator<Creature>::Update(Creature& creature, const uint32&
     {
         i_nextMoveTime.Update(diff);
         if (i_nextMoveTime.Passed())
-            { _setRandomLocation(creature); }
+        {
+            _setRandomLocation(creature);
+        }
     }
     return true;
 }

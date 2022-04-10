@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,7 +46,9 @@ DelayExecutor::~DelayExecutor()
 int DelayExecutor::deactivate()
 {
     if (!activated())
+    {
         return -1;
+    }
 
     activated(false);
     queue_.queue()->deactivate();
@@ -62,7 +64,9 @@ int DelayExecutor::svc()
         ACE_Method_Request* rq = queue_.dequeue();
 
         if (!rq)
+        {
             break;
+        }
 
         rq->call();
         delete rq;
@@ -74,15 +78,21 @@ int DelayExecutor::svc()
 int DelayExecutor::_activate(int num_threads)
 {
     if (activated())
+    {
         return -1;
+    }
 
     if (num_threads < 1)
+    {
         return -1;
+    }
 
     queue_.queue()->activate();
 
     if (ACE_Task_Base::activate(THR_NEW_LWP | THR_JOINABLE | THR_INHERIT_SCHED, num_threads) == -1)
+    {
         return -1;
+    }
 
     activated(true);
 
@@ -92,7 +102,9 @@ int DelayExecutor::_activate(int num_threads)
 int DelayExecutor::execute(ACE_Method_Request* new_req)
 {
     if (new_req == NULL)
+    {
         return -1;
+    }
 
     if (queue_.enqueue(new_req, (ACE_Time_Value*)&ACE_Time_Value::zero) == -1)
     {

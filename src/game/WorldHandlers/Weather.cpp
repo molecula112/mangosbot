@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -80,7 +80,9 @@ bool Weather::Update(uint32 diff, Map const* _map)
         {
             ///- Weather will be removed if not updated (no players in zone anymore)
             if (!SendWeatherForPlayersInZone(_map))
-                { return false; }
+            {
+                return false;
+            }
         }
     }
     return true;
@@ -90,7 +92,9 @@ bool Weather::Update(uint32 diff, Map const* _map)
 bool Weather::ReGenerate()
 {
     if (m_isPermanentWeather)
+    {
         return false;
+    }
 
     // remember old values
     WeatherType old_type = m_type;
@@ -112,7 +116,9 @@ bool Weather::ReGenerate()
     uint32 u = urand(0, 99);
 
     if (u < 30)
-        { return false; }
+    {
+        return false;
+    }
 
     // 78 days between January 1st and March 20nd; 365/4=91 days by season
     // season source http://aa.usno.navy.mil/data/docs/EarthSeasons.html
@@ -178,13 +184,21 @@ bool Weather::ReGenerate()
 
     uint32 rnd = urand(1, 100);
     if (rnd <= chance1)
-        { m_type = WEATHER_TYPE_RAIN; }
+    {
+        m_type = WEATHER_TYPE_RAIN;
+    }
     else if (rnd <= chance2)
-        { m_type = WEATHER_TYPE_SNOW; }
+    {
+        m_type = WEATHER_TYPE_SNOW;
+    }
     else if (rnd <= chance3)
-        { m_type = WEATHER_TYPE_STORM; }
+    {
+        m_type = WEATHER_TYPE_STORM;
+    }
     else
-        { m_type = WEATHER_TYPE_FINE; }
+    {
+        m_type = WEATHER_TYPE_FINE;
+    }
 
     /// New weather statistics (if not fine):
     ///- 85% light
@@ -205,9 +219,13 @@ bool Weather::ReGenerate()
         // Severe change, but how severe?
         rnd = urand(0, 99);
         if (rnd < 50)
-            { m_grade = rand_norm_f() * 0.3333f + 0.3334f; }
+        {
+            m_grade = rand_norm_f() * 0.3333f + 0.3334f;
+        }
         else
-            { m_grade = rand_norm_f() * 0.3333f + 0.6667f; }
+        {
+            m_grade = rand_norm_f() * 0.3333f + 0.6667f;
+        }
     }
 
     NormalizeGrade();
@@ -242,7 +260,9 @@ bool Weather::SendWeatherForPlayersInZone(Map const* _map)
 
     ///- Send the weather packet to all players in this zone
     if (!_map->SendToPlayersInZone(&data, m_zone))
+    {
         return false;
+    }
 
     ///- Log the event
     LogWeatherState(GetWeatherState());
@@ -259,7 +279,9 @@ void Weather::SetWeather(WeatherType type, float grade, Map const* _map, bool is
     m_isPermanentWeather = isPermanent;
 
     if (m_type == type && m_grade == grade)
+    {
         return;
+    }
 
     m_type = type;
     m_grade = grade;
@@ -270,31 +292,51 @@ void Weather::SetWeather(WeatherType type, float grade, Map const* _map, bool is
 WeatherState Weather::GetWeatherState() const
 {
     if (m_grade < 0.27f)
+    {
         return WEATHER_STATE_FINE;
+    }
 
     switch (m_type)
     {
         case WEATHER_TYPE_RAIN:
             if (m_grade < 0.40f)
+            {
                 return WEATHER_STATE_LIGHT_RAIN;
+            }
             else if (m_grade < 0.70f)
+            {
                 return WEATHER_STATE_MEDIUM_RAIN;
+            }
             else
+            {
                 return WEATHER_STATE_HEAVY_RAIN;
+            }
         case WEATHER_TYPE_SNOW:
             if (m_grade < 0.40f)
+            {
                 return WEATHER_STATE_LIGHT_SNOW;
+            }
             else if (m_grade < 0.70f)
+            {
                 return WEATHER_STATE_MEDIUM_SNOW;
+            }
             else
+            {
                 return WEATHER_STATE_HEAVY_SNOW;
+            }
         case WEATHER_TYPE_STORM:
             if (m_grade < 0.40f)
+            {
                 return WEATHER_STATE_LIGHT_SANDSTORM;
+            }
             else if (m_grade < 0.70f)
+            {
                 return WEATHER_STATE_MEDIUM_SANDSTORM;
+            }
             else
+            {
                 return WEATHER_STATE_HEAVY_SANDSTORM;
+            }
         case WEATHER_TYPE_FINE:
         default:
             return WEATHER_STATE_FINE;
@@ -304,9 +346,13 @@ WeatherState Weather::GetWeatherState() const
 void Weather::NormalizeGrade()
 {
     if (m_grade >= 1)
-        { m_grade = 0.9999f; }
+    {
+        m_grade = 0.9999f;
+    }
     else if (m_grade < 0)
-        { m_grade = 0.0001f; }
+    {
+        m_grade = 0.0001f;
+    }
 }
 
 // Helper to log recent state
@@ -362,7 +408,9 @@ WeatherSystem::~WeatherSystem()
 {
     ///- Empty the WeatherMap
     for (WeatherMap::const_iterator itr = m_weathers.begin(); itr != m_weathers.end(); ++itr)
+    {
         delete itr->second;
+    }
 
     m_weathers.clear();
 }
@@ -373,7 +421,9 @@ Weather* WeatherSystem::FindOrCreateWeather(uint32 zoneId)
     WeatherMap::const_iterator itr = m_weathers.find(zoneId);
     // Return if found
     if (itr != m_weathers.end())
+    {
         return itr->second;
+    }
     // Create
     Weather* w = new Weather(zoneId, sWeatherMgr.GetWeatherChances(zoneId));
     m_weathers[zoneId] = w;
@@ -394,7 +444,9 @@ void WeatherSystem::UpdateWeathers(uint32 diff)
             m_weathers.erase(itr++);
         }
         else
+        {
             ++itr;
+        }
     }
 }
 
@@ -406,27 +458,45 @@ uint32 Weather::GetSound()
     {
         case WEATHER_TYPE_RAIN:                             // rain
             if (m_grade < 0.40f)
-                { sound = WEATHER_RAINLIGHT; }
+            {
+                sound = WEATHER_RAINLIGHT;
+            }
             else if (m_grade < 0.70f)
-                { sound = WEATHER_RAINMEDIUM; }
+            {
+                sound = WEATHER_RAINMEDIUM;
+            }
             else
-                { sound = WEATHER_RAINHEAVY; }
+            {
+                sound = WEATHER_RAINHEAVY;
+            }
             break;
         case WEATHER_TYPE_SNOW:                             // snow
             if (m_grade < 0.40f)
-                { sound = WEATHER_SNOWLIGHT; }
+            {
+                sound = WEATHER_SNOWLIGHT;
+            }
             else if (m_grade < 0.70f)
-                { sound = WEATHER_SNOWMEDIUM; }
+            {
+                sound = WEATHER_SNOWMEDIUM;
+            }
             else
-                { sound = WEATHER_SNOWHEAVY; }
+            {
+                sound = WEATHER_SNOWHEAVY;
+            }
             break;
         case WEATHER_TYPE_STORM:                            // storm
             if (m_grade < 0.40f)
-                { sound = WEATHER_SANDSTORMLIGHT; }
+            {
+                sound = WEATHER_SANDSTORMLIGHT;
+            }
             else if (m_grade < 0.70f)
-                { sound = WEATHER_SANDSTORMMEDIUM; }
+            {
+                sound = WEATHER_SANDSTORMMEDIUM;
+            }
             else
-                { sound = WEATHER_SANDSTORMHEAVY; }
+            {
+                sound = WEATHER_SANDSTORMHEAVY;
+            }
             break;
         case WEATHER_TYPE_FINE:                             // fine
         default:
@@ -442,7 +512,7 @@ void WeatherMgr::LoadWeatherZoneChances()
     uint32 count = 0;
 
     //                                                0     1                   2                   3                    4                   5                   6                    7                 8                 9                  10                  11                  12
-    QueryResult* result = WorldDatabase.Query("SELECT zone, spring_rain_chance, spring_snow_chance, spring_storm_chance, summer_rain_chance, summer_snow_chance, summer_storm_chance, fall_rain_chance, fall_snow_chance, fall_storm_chance, winter_rain_chance, winter_snow_chance, winter_storm_chance FROM game_weather");
+    QueryResult* result = WorldDatabase.Query("SELECT `zone`, `spring_rain_chance`, `spring_snow_chance`, `spring_storm_chance`, `summer_rain_chance`, `summer_snow_chance`, `summer_storm_chance`, `fall_rain_chance`, `fall_snow_chance`, `fall_storm_chance`, `winter_rain_chance`, `winter_snow_chance`, `winter_storm_chance` FROM `game_weather`");
 
     if (!result)
     {

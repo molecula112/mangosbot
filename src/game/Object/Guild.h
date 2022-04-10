@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,7 +63,6 @@ enum GuildRankRights
     GR_RIGHT_EPNOTE             = 0x00002040,
     GR_RIGHT_VIEWOFFNOTE        = 0x00004040,
     GR_RIGHT_EOFFNOTE           = 0x00008040,
-    // [-ZERO] tbc enumerations [?]
     GR_RIGHT_MODIFY_GUILD_INFO  = 0x00010040,
     GR_RIGHT_ALL                = 0x000FF1FF
 };
@@ -76,7 +75,6 @@ enum Typecommand
     GUILD_FOUNDER_S = 0x0E,
     GUILD_UNK19     = 0x13,
     GUILD_UNK20     = 0x14
-    // [ZERO] in SMSG_GUILD_COMMAND_RESULT: 2,4-13,15-18 no effect for no error
 };
 
 enum CommandErrors
@@ -97,7 +95,6 @@ enum CommandErrors
     ERR_GUILD_NOT_ALLIED            = 0x0C,
     ERR_GUILD_RANK_TOO_HIGH_S       = 0x0D,
     ERR_GUILD_RANK_TOO_LOW_S        = 0x0E,
-    // [ZERO] 0x0F, 0x10 unused
     ERR_GUILD_RANKS_LOCKED          = 0x11,
     ERR_GUILD_RANK_IN_USE           = 0x12,
     ERR_GUILD_IGNORING_YOU_S        = 0x13,
@@ -256,7 +253,9 @@ class Guild
             for (MemberList::iterator itr = members.begin(); itr != members.end(); ++itr)
                 if (Player* player = sObjectAccessor.FindPlayer(ObjectGuid(HIGHGUID_PLAYER, itr->first)))
                     if (player != except)
-                        { _do(player); }
+                    {
+                        _do(player);
+                    }
         }
 
         void CreateRank(std::string name, uint32 rights);
@@ -288,7 +287,9 @@ class Guild
         {
             for (MemberList::iterator itr = members.begin(); itr != members.end(); ++itr)
                 if (itr->second.Name == name)
-                    { return &itr->second; }
+                {
+                    return &itr->second;
+                }
 
             return NULL;
         }

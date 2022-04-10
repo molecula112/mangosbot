@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,9 @@ int AggressorAI::Permissible(const Creature* creature)
 {
     // have some hostile factions, it will be selected by IsHostileTo check at MoveInLineOfSight
     if (!(creature->GetCreatureInfo()->ExtraFlags & CREATURE_EXTRA_FLAG_NO_AGGRO) && !creature->IsNeutralToAll())
-        { return PERMIT_BASE_PROACTIVE; }
+    {
+        return PERMIT_BASE_PROACTIVE;
+    }
 
     return PERMIT_BASE_NO;
 }
@@ -47,7 +49,9 @@ void AggressorAI::MoveInLineOfSight(Unit* u)
 {
     // Ignore Z for flying creatures
     if (!m_creature->CanFly() && m_creature->GetDistanceZ(u) > CREATURE_Z_ATTACK_RANGE)
-        { return; }
+    {
+        return;
+    }
 
     if (m_creature->CanInitiateAttack() && u->IsTargetableForAttack() &&
         m_creature->IsHostileTo(u) && u->isInAccessablePlaceFor(m_creature))
@@ -110,39 +114,50 @@ void AggressorAI::EnterEvadeMode()
 
         // Remove ChaseMovementGenerator from MotionMaster stack list, and add HomeMovementGenerator instead
         if (m_creature->GetMotionMaster()->GetCurrentMovementGeneratorType() == CHASE_MOTION_TYPE)
-            { m_creature->GetMotionMaster()->MoveTargetedHome(); }
+        {
+            m_creature->GetMotionMaster()->MoveTargetedHome();
+        }
     }
 
     m_creature->DeleteThreatList();
     i_victimGuid.Clear();
     m_creature->CombatStop(true);
     m_creature->SetLootRecipient(NULL);
+
+    // Reset back to default spells template. This also resets timers.
+    SetSpellsList(m_creature->GetCreatureInfo()->SpellListId);
 }
 
-void
-AggressorAI::UpdateAI(const uint32 /*diff*/)
+void AggressorAI::UpdateAI(const uint32 diff)
 {
     // update i_victimGuid if m_creature->getVictim() !=0 and changed
     if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-        { return; }
+    {
+        return;
+    }
 
     i_victimGuid = m_creature->getVictim()->GetObjectGuid();
+
+    if (!m_CreatureSpells.empty())
+    {
+        UpdateSpellsList(diff);
+    }
 
     DoMeleeAttackIfReady();
 }
 
-bool
-AggressorAI::IsVisible(Unit* pl) const
+bool AggressorAI::IsVisible(Unit* pl) const
 {
     return m_creature->IsWithinDist(pl, sWorld.getConfig(CONFIG_FLOAT_SIGHT_MONSTER))
            && pl->IsVisibleForOrDetect(m_creature, m_creature, true);
 }
 
-void
-AggressorAI::AttackStart(Unit* u)
+void AggressorAI::AttackStart(Unit* u)
 {
     if (!u)
-        { return; }
+    {
+        return;
+    }
 
     if (m_creature->Attack(u, true))
     {

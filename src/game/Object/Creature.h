@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -136,6 +136,7 @@ struct CreatureInfo
     int32   ResistanceFrost;
     int32   ResistanceShadow;
     int32   ResistanceArcane;
+    uint32  SpellListId;
     uint32  PetSpellDataId;
     uint32  MovementType;
     uint32  TrainerType;
@@ -161,11 +162,17 @@ struct CreatureInfo
     SkillType GetRequiredLootSkill() const
     {
         if (CreatureTypeFlags & CREATURE_TYPEFLAGS_HERBLOOT)
-            { return SKILL_HERBALISM; }
+        {
+            return SKILL_HERBALISM;
+        }
         else if (CreatureTypeFlags & CREATURE_TYPEFLAGS_MININGLOOT)
-            { return SKILL_MINING; }
+        {
+            return SKILL_MINING;
+        }
         else
-            { return SKILL_SKINNING; }                          // normal case
+        {
+            return SKILL_SKINNING; // normal case
+        }
     }
 
     bool isTameable() const
@@ -226,7 +233,10 @@ struct CreatureData
     uint8 movementType;
 
     // helper function
-    ObjectGuid GetObjectGuid(uint32 lowguid) const { return ObjectGuid(CreatureInfo::GetHighGuid(), id, lowguid); }
+    ObjectGuid GetObjectGuid(uint32 lowguid) const
+    {
+        return ObjectGuid(CreatureInfo::GetHighGuid(), id, lowguid);
+    }
 };
 
 enum SplineFlags
@@ -265,8 +275,8 @@ struct CreatureModelInfo
     float bounding_radius;
     float combat_reach;
     uint8 gender;
-    uint32 modelid_other_gender;                            // The oposite gender for this modelid (male/female)
-    uint32 modelid_other_team;                              // The oposite team. Generally for alliance totem
+    uint32 modelid_other_gender;                            // The opposite gender for this modelid (male/female)
+    uint32 modelid_other_team;                              // The opposite team. Generally for alliance totem
 };
 
 // GCC have alternative #pragma pack() syntax and old gcc version not support pack(pop), also any gcc version not support it at some platform
@@ -357,7 +367,10 @@ struct VendorItemData
 
     VendorItem* GetItem(uint32 slot) const
     {
-        if (slot >= m_items.size()) { return NULL; }
+        if (slot >= m_items.size())
+        {
+            return NULL;
+        }
         return m_items[slot];
     }
     bool Empty() const { return m_items.empty(); }
@@ -373,7 +386,9 @@ struct VendorItemData
     void Clear()
     {
         for (VendorItemList::const_iterator itr = m_items.begin(); itr != m_items.end(); ++itr)
-            { delete(*itr); }
+        {
+            delete(*itr);
+        }
         m_items.clear();
     }
 };
@@ -536,9 +551,9 @@ class Creature : public Unit
 
         bool CanWalk() const { return GetCreatureInfo()->InhabitType & INHABIT_GROUND; }
         virtual bool CanSwim() const override { return GetCreatureInfo()->InhabitType & INHABIT_WATER; }
-        bool IsSwimming() const { return (m_movementInfo.HasMovementFlag((MovementFlags)(MOVEFLAG_SWIMMING))); } 
+        bool IsSwimming() const { return (m_movementInfo.HasMovementFlag((MovementFlags)(MOVEFLAG_SWIMMING))); }
         virtual bool CanFly() const override { return (GetCreatureInfo()->InhabitType & INHABIT_AIR) || m_movementInfo.HasMovementFlag((MovementFlags)(MOVEFLAG_LEVITATING | MOVEFLAG_CAN_FLY)); }
-        bool IsFlying() const { return (m_movementInfo.HasMovementFlag((MovementFlags)(MOVEFLAG_FLYING|MOVEFLAG_LEVITATING))); }
+        bool IsFlying() const { return (m_movementInfo.HasMovementFlag((MovementFlags)(MOVEFLAG_FLYING | MOVEFLAG_LEVITATING))); }
         bool IsTrainerOf(Player* player, bool msg) const;
         bool CanInteractWithBattleMaster(Player* player, bool msg) const;
         bool CanTrainAndResetTalentsOf(Player* pPlayer) const;
@@ -553,7 +568,9 @@ class Creature : public Unit
         bool IsElite() const
         {
             if (IsPet())
-                { return false; }
+            {
+                return false;
+            }
 
             uint32 rank = GetCreatureInfo()->Rank;
             return rank != CREATURE_ELITE_NORMAL && rank != CREATURE_ELITE_RARE;
@@ -562,7 +579,9 @@ class Creature : public Unit
         bool IsWorldBoss() const
         {
             if (IsPet())
-                { return false; }
+            {
+                return false;
+            }
 
             return GetCreatureInfo()->Rank == CREATURE_ELITE_WORLDBOSS;
         }
@@ -699,7 +718,7 @@ class Creature : public Unit
 
         /**
         * function indicating whether the recipient is a group.
-        * 
+        *
         * \return boolean true if the creature's recipient is a group, false otherwise.
         */
         bool IsGroupLootRecipient() const { return m_lootGroupRecipientId; }
@@ -713,6 +732,10 @@ class Creature : public Unit
         uint32 m_spells[CREATURE_MAX_SPELLS];
         CreatureSpellCooldowns m_CreatureSpellCooldowns;
         CreatureSpellCooldowns m_CreatureCategoryCooldowns;
+
+        // Used by Creature Spells system to always know result of cast
+        SpellCastResult TryToCast(Unit* pTarget, uint32 uiSpell, uint32 uiCastFlags, uint8 uiChance);
+        SpellCastResult TryToCast(Unit* pTarget, SpellEntry const* pSpellInfo, uint32 uiCastFlags, uint8 uiChance);
 
         float GetAttackDistance(Unit const* pl) const;
 
@@ -786,9 +809,13 @@ class Creature : public Unit
         virtual uint32 GetPetAutoSpellOnPos(uint8 pos) const
         {
             if (pos >= CREATURE_MAX_SPELLS || m_charmInfo->GetCharmSpell(pos)->GetType() != ACT_ENABLED)
-                { return 0; }
+            {
+                return 0;
+            }
             else
-                { return m_charmInfo->GetCharmSpell(pos)->GetAction(); }
+            {
+                return m_charmInfo->GetCharmSpell(pos)->GetAction();
+            }
         }
 
         void SetCombatStartPosition(float x, float y, float z) { m_combatStartX = x; m_combatStartY = y; m_combatStartZ = z; }
@@ -867,7 +894,7 @@ class Creature : public Unit
 
     private:
         GridReference<Creature> m_gridRef;
-        CreatureInfo const* m_creatureInfo;
+        CreatureInfo const* m_creatureInfo;                 // in difficulty mode > 0 can different from ObjMgr::GetCreatureTemplate(GetEntry())
 };
 
 class ForcedDespawnDelayEvent : public BasicEvent

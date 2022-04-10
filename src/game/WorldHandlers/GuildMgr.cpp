@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,7 +40,9 @@ GuildMgr::GuildMgr()
 GuildMgr::~GuildMgr()
 {
     for (GuildMap::iterator itr = m_GuildMap.begin(); itr != m_GuildMap.end(); ++itr)
-        { delete itr->second; }
+    {
+        delete itr->second;
+    }
 }
 
 void GuildMgr::AddGuild(Guild* guild)
@@ -57,7 +59,9 @@ Guild* GuildMgr::GetGuildById(uint32 guildId) const
 {
     GuildMap::const_iterator itr = m_GuildMap.find(guildId);
     if (itr != m_GuildMap.end())
-        { return itr->second; }
+    {
+        return itr->second;
+    }
 
     return NULL;
 }
@@ -66,7 +70,9 @@ Guild* GuildMgr::GetGuildByName(std::string const& name) const
 {
     for (GuildMap::const_iterator itr = m_GuildMap.begin(); itr != m_GuildMap.end(); ++itr)
         if (itr->second->GetName() == name)
-            { return itr->second; }
+        {
+            return itr->second;
+        }
 
     return NULL;
 }
@@ -75,7 +81,9 @@ Guild* GuildMgr::GetGuildByLeader(ObjectGuid const& guid) const
 {
     for (GuildMap::const_iterator itr = m_GuildMap.begin(); itr != m_GuildMap.end(); ++itr)
         if (itr->second->GetLeaderGuid() == guid)
-            { return itr->second; }
+        {
+            return itr->second;
+        }
 
     return NULL;
 }
@@ -84,7 +92,9 @@ std::string GuildMgr::GetGuildNameById(uint32 guildId) const
 {
     GuildMap::const_iterator itr = m_GuildMap.find(guildId);
     if (itr != m_GuildMap.end())
-        { return itr->second->GetName(); }
+    {
+        return itr->second->GetName();
+    }
 
     return "";
 }
@@ -95,9 +105,9 @@ void GuildMgr::LoadGuilds()
     uint32 count = 0;
 
     //                                                    0             1          2          3           4           5           6
-    QueryResult* result = CharacterDatabase.Query("SELECT guild.guildid,guild.name,leaderguid,EmblemStyle,EmblemColor,BorderStyle,BorderColor,"
+    QueryResult* result = CharacterDatabase.Query("SELECT `guild`.`guildid`,`guild`.`name`,`leaderguid`,`EmblemStyle`,`EmblemColor`,`BorderStyle`,`BorderColor`,"
                           //   7               8    9    10
-                          "BackgroundColor,info,motd,createdate FROM guild ORDER BY guildid ASC");
+                          "`BackgroundColor`,`info`,`motd`,`createdate` FROM `guild` ORDER BY `guildid` ASC");
 
     if (!result)
     {
@@ -110,14 +120,14 @@ void GuildMgr::LoadGuilds()
 
     // load guild ranks
     //                                                                0       1   2     3
-    QueryResult* guildRanksResult   = CharacterDatabase.Query("SELECT guildid,rid,rname,rights FROM guild_rank ORDER BY guildid ASC, rid ASC");
+    QueryResult* guildRanksResult   = CharacterDatabase.Query("SELECT `guildid`,`rid`,`rname`,`rights` FROM `guild_rank` ORDER BY `guildid` ASC, `rid` ASC");
 
     // load guild members
     //                                                                0       1                 2    3     4
-    QueryResult* guildMembersResult = CharacterDatabase.Query("SELECT guildid,guild_member.guid,rank,pnote,offnote,"
+    QueryResult* guildMembersResult = CharacterDatabase.Query("SELECT `guildid`,`guild_member`.`guid`,`rank`,`pnote`,`offnote`,"
                                       //   5                6                 7                 8                9                       10
-                                      "characters.name, characters.level, characters.class, characters.zone, characters.logout_time, characters.account "
-                                      "FROM guild_member LEFT JOIN characters ON characters.guid = guild_member.guid ORDER BY guildid ASC");
+                                      "`characters`.`name`, `characters`.`level`, `characters`.`class`, `characters`.`zone`, `characters`.`logout_time`, `characters`.`account` "
+                                      "FROM `guild_member` LEFT JOIN `characters` ON `characters`.`guid` = `guild_member`.`guid` ORDER BY `guildid` ASC");
 
     BarGoLink bar(result->GetRowCount());
 
@@ -150,7 +160,7 @@ void GuildMgr::LoadGuilds()
 
     // delete unused LogGuid records in guild_eventlog table
     // you can comment these lines if you don't plan to change CONFIG_UINT32_GUILD_EVENT_LOG_COUNT
-    CharacterDatabase.PExecute("DELETE FROM guild_eventlog WHERE LogGuid > '%u'", sWorld.getConfig(CONFIG_UINT32_GUILD_EVENT_LOG_COUNT));
+    CharacterDatabase.PExecute("DELETE FROM `guild_eventlog` WHERE `LogGuid` > '%u'", sWorld.getConfig(CONFIG_UINT32_GUILD_EVENT_LOG_COUNT));
 
     sLog.outString(">> Loaded %u guild definitions", count);
     sLog.outString();

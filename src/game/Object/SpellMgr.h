@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ struct SpellModifier;
 enum SpellCategories
 {
     SPELLCATEGORY_HEALTH_MANA_POTIONS = 4,
-    SPELLCATEGORY_DEVOUR_MAGIC        = 12
+    SPELLCATEGORY_DEVOUR_MAGIC        = 12,
 };
 
 /**
@@ -88,8 +88,14 @@ inline float GetSpellRadius(SpellRadiusEntry const* radius) { return (radius ? r
 uint32 GetSpellCastTime(SpellEntry const* spellInfo, Spell const* spell = NULL);
 uint32 GetSpellCastTimeForBonus(SpellEntry const* spellProto, DamageEffectType damagetype);
 float CalculateDefaultCoefficient(SpellEntry const* spellProto, DamageEffectType const damagetype);
-inline float GetSpellMinRange(SpellRangeEntry const* range) { return (range ? range->minRange : 0); }
-inline float GetSpellMaxRange(SpellRangeEntry const* range) { return (range ? range->maxRange : 0); }
+inline float GetSpellMinRange(SpellRangeEntry const* range)
+{
+    return (range ? range->minRange : 0);
+}
+inline float GetSpellMaxRange(SpellRangeEntry const* range)
+{
+    return (range ? range->maxRange : 0);
+}
 inline uint32 GetSpellRecoveryTime(SpellEntry const* spellInfo) { return spellInfo->RecoveryTime > spellInfo->CategoryRecoveryTime ? spellInfo->RecoveryTime : spellInfo->CategoryRecoveryTime; }
 int32 GetSpellDuration(SpellEntry const* spellInfo);
 int32 GetSpellMaxDuration(SpellEntry const* spellInfo);
@@ -121,7 +127,9 @@ inline bool IsSpellAppliesAura(SpellEntry const* spellInfo, uint32 effectMask = 
     for (int i = 0; i < MAX_EFFECT_INDEX; ++i)
         if (effectMask & (1 << i))
             if (IsAuraApplyEffect(spellInfo, SpellEffectIndex(i)))
-                { return true; }
+            {
+                return true;
+            }
 
     return false;
 }
@@ -159,7 +167,9 @@ inline bool IsSpellHaveAura(SpellEntry const* spellInfo, AuraType aura, uint32 e
     for (int i = 0; i < MAX_EFFECT_INDEX; ++i)
         if (effectMask & (1 << i))
             if (AuraType(spellInfo->EffectApplyAuraName[i]) == aura)
-                { return true; }
+            {
+                return true;
+            }
     return false;
 }
 
@@ -167,7 +177,9 @@ inline bool IsSpellLastAuraEffect(SpellEntry const* spellInfo, SpellEffectIndex 
 {
     for (int i = effecIdx + 1; i < MAX_EFFECT_INDEX; ++i)
         if (spellInfo->EffectApplyAuraName[i])
-            { return false; }
+        {
+            return false;
+        }
     return true;
 }
 
@@ -198,7 +210,9 @@ bool IsPassiveSpell(SpellEntry const* spellProto);
 inline bool IsPassiveSpellStackableWithRanks(SpellEntry const* spellProto)
 {
     if (!IsPassiveSpell(spellProto))
-        { return false; }
+    {
+        return false;
+    }
 
     return !spellProto->HasSpellEffect(SPELL_EFFECT_APPLY_AURA);
 }
@@ -260,18 +274,26 @@ inline bool IsSpellWithCasterSourceTargetsOnly(SpellEntry const* spellInfo)
     for (int i = 0; i < MAX_EFFECT_INDEX; ++i)
     {
         if (!spellInfo->Effect[i])                          // Skip junk in DBC
-            { continue; }
+        {
+            continue;
+        }
 
         uint32 targetA = spellInfo->EffectImplicitTargetA[i];
         if (targetA && !IsCasterSourceTarget(targetA))
-            { return false; }
+        {
+            return false;
+        }
 
         uint32 targetB = spellInfo->EffectImplicitTargetB[i];
         if (targetB && !IsCasterSourceTarget(targetB))
-            { return false; }
+        {
+            return false;
+        }
 
         if (!targetA && !targetB)
-            { return false; }
+        {
+            return false;
+        }
     }
     return true;
 }
@@ -338,14 +360,117 @@ inline bool IsAreaEffectTarget(Targets target)
     return false;
 }
 
+inline bool IsSpellRemovedOnEvade(SpellEntry const* spellInfo)
+{
+    //TODO: search for potential correct case for Classic
+    /*if (IsSpellHaveAura(spellInfo, SPELL_AURA_FLY))
+        return false; */
+
+    switch (spellInfo->Id)
+    {
+        case 588:           // Inner Fire (Rank 1)
+        case 3235:          // Rancid Blood
+        case 3284:          // Violent Shield
+        case 3417:          // Thrash
+        case 3418:          // Improved Blocking
+        case 3616:          // Poison Proc
+        case 3637:          // Improved Blocking III
+        case 5111:          // Living Flame Passive
+        case 5301:          // Defensive State (DND)
+        case 5680:          // Torch Burn
+        case 6718:          // Phasing Stealth
+        case 6752:          // Weak Poison Proc
+        case 6947:          // Curse of the Bleakheart Proc
+        case 7090:          // Bear Form (Shapeshift)
+        case 7165:          // Battle Stance (Rank 1)
+        case 7276:          // Poison Proc
+        case 8247:          // Wandering Plague
+        case 8279:          // Stealth Detection
+        case 8393:          // Barbs
+        case 8599:          // Enrage
+        case 8601:          // Slowing Poison
+        case 8876:          // Thrash
+        case 9205:          // Hate to Zero (Hate to Zero)
+        case 9460:          // Corrosive Ooze
+        case 9941:          // Spell Reflection
+        case 10022:         // Deadly Poison
+        case 10072:         // Splintered Obsidian
+        case 10074:         // Spell Reflection
+        case 10095:         // Hate to Zero (Hate to Zero)
+        case 11838:         // Hate to Zero (Hate to Zero)
+        case 11919:         // Poison Proc
+        case 11966:         // Fire Shield
+        case 11984:         // Immolate
+        case 12099:         // Shield Spike
+        case 12246:         // Infected Spine
+        case 12529:         // Chilling Touch
+        case 12539:         // Ghoul Rot
+        case 12546:         // Spitelash (Spitelash)
+        case 12556:         // Frost Armor
+        case 12627:         // Disease Cloud
+        case 12787:         // Thrash
+        case 12898:         // Smoke Aura Visual
+        case 13299:         // Poison Proc
+        case 13616:         // Wracking Pains Proc
+        case 13767:         // Hate to Zero (Hate to Zero)
+        case 14178:         // Sticky Tar
+        case 15088:         // Flurry
+        case 15097:         // Enrage
+        case 15876:         // Ice Blast
+        case 16140:         // Exploding Cadaver (Exploding Cadaver)
+        case 16563:         // Drowning Death
+        case 16577:         // Disease Cloud
+        case 16592:         // Shadowform
+        case 17327:         // Spirit Particles
+        case 17467:         // Unholy Aura
+        case 18148:         // Static Field
+        case 18268:         // Fire Shield
+        case 18943:         // Double Attack
+        case 18968:         // Fire Shield
+        case 19030:         // Bear Form (Shapeshift)
+        case 18950:         // Invisibility and Stealth Detection
+        case 19194:         // Double Attack
+        case 19195:         // Hate to 90% (Hate to 90%)
+        case 19396:         // Incinerate (Incinerate)
+        case 19626:         // Fire Shield (Fire Shield)
+        case 19640:         // Pummel (Pummel)
+        case 19817:         // Double Attack
+        case 19818:         // Double Attack
+        case 20514:         // Ruul Snowhoof Shapechange (DND)
+        case 21061:         // Putrid Breath
+        case 21857:         // Lava Shield
+        case 22128:         // Thorns
+        case 22578:         // Glowy (Black)
+        case 22735:         // Spirit of Runn Tum
+        case 22781:         // Thornling
+        case 22788:         // Grow
+        case 22856:         // Ice Lock (Guard Slip'kik ice trap in Dire Maul)
+        case 25592:         // Hate to Zero (Hate to Zero)
+        case 26341:         // Saurfang's Rage
+        case 27987:         // Unholy Aura
+        case 28126:         // Spirit Particles (purple)
+        case 29526:         // Hate to Zero (Hate to Zero)
+            return false;
+        default:
+            return true;
+    }
+}
+
+
 inline bool IsAreaOfEffectSpell(SpellEntry const* spellInfo)
 {
     if (IsAreaEffectTarget(Targets(spellInfo->EffectImplicitTargetA[EFFECT_INDEX_0])) || IsAreaEffectTarget(Targets(spellInfo->EffectImplicitTargetB[EFFECT_INDEX_0])))
-        { return true; }
+    {
+        return true;
+    }
     if (IsAreaEffectTarget(Targets(spellInfo->EffectImplicitTargetA[EFFECT_INDEX_1])) || IsAreaEffectTarget(Targets(spellInfo->EffectImplicitTargetB[EFFECT_INDEX_1])))
-        { return true; }
+    {
+        return true;
+    }
     if (IsAreaEffectTarget(Targets(spellInfo->EffectImplicitTargetA[EFFECT_INDEX_2])) || IsAreaEffectTarget(Targets(spellInfo->EffectImplicitTargetB[EFFECT_INDEX_2])))
-        { return true; }
+    {
+        return true;
+    }
     return false;
 }
 
@@ -353,7 +478,9 @@ inline bool IsAreaAuraEffect(uint32 effect)
 {
     if (effect == SPELL_EFFECT_APPLY_AREA_AURA_PARTY    ||
         effect == SPELL_EFFECT_APPLY_AREA_AURA_PET)
-        { return true; }
+    {
+        return true;
+    }
     return false;
 }
 
@@ -361,7 +488,9 @@ inline bool HasAreaAuraEffect(SpellEntry const* spellInfo)
 {
     for (int32 i = 0; i < MAX_EFFECT_INDEX; ++i)
         if (IsAreaAuraEffect(spellInfo->Effect[i]))
-            { return true; }
+        {
+            return true;
+        }
     return false;
 }
 
@@ -385,7 +514,9 @@ inline bool IsOnlySelfTargeting(SpellEntry const* spellInfo)
     for (int32 i = 0; i < MAX_EFFECT_INDEX; ++i)
     {
         if (!spellInfo->Effect[i])
-            { return true; }
+        {
+            return true;
+        }
 
         switch (spellInfo->EffectImplicitTargetA[i])
         {
@@ -404,6 +535,18 @@ inline bool IsOnlySelfTargeting(SpellEntry const* spellInfo)
         }
     }
     return true;
+}
+
+inline bool IsDismountSpell(SpellEntry const* spellInfo)
+{
+    for (int32 i = 0; i < MAX_EFFECT_INDEX; ++i)
+    {
+        if ((spellInfo->Effect[i] == SPELL_EFFECT_APPLY_AURA) && (spellInfo->EffectApplyAuraName[i] == SPELL_AURA_MECHANIC_IMMUNITY) && (spellInfo->EffectMiscValue[i] == MECHANIC_MOUNT))
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 inline bool IsDispelSpell(SpellEntry const* spellInfo)
@@ -435,8 +578,10 @@ inline bool IsChanneledSpell(SpellEntry const* spellInfo)
 
 inline bool IsNeedCastSpellAtFormApply(SpellEntry const* spellInfo, ShapeshiftForm form)
 {
-    if ((!spellInfo->HasAttribute(SPELL_ATTR_PASSIVE) && !spellInfo->HasAttribute(SPELL_ATTR_HIDE_SPELL)) || !form)
-        { return false; }
+    if ((!spellInfo->HasAttribute(SPELL_ATTR_PASSIVE) && !spellInfo->HasAttribute(SPELL_ATTR_HIDDEN_CLIENTSIDE)) || !form)
+    {
+        return false;
+    }
 
     // passive spells with SPELL_ATTR_EX2_NOT_NEED_SHAPESHIFT are already active without shapeshift, do no recast!
     // Feline Swiftness Passive 2a not have 0x1 mask in Stance field in spell data as expected
@@ -449,6 +594,28 @@ inline bool IsNeedCastSpellAtOutdoor(SpellEntry const* spellInfo)
     return (spellInfo->HasAttribute(SPELL_ATTR_OUTDOORS_ONLY) && spellInfo->HasAttribute(SPELL_ATTR_PASSIVE));
 }
 
+// Spell effects require a specific power type on the target
+inline bool IsTargetPowerTypeValid(SpellEntry const* spellInfo, Powers powerType)
+{
+    for (int i = 0; i < MAX_EFFECT_INDEX; ++i)
+    {
+        if (spellInfo->Effect[i] == SPELL_EFFECT_NONE)
+        {
+            continue;
+        }
+
+        if ((spellInfo->Effect[i] == SPELL_EFFECT_POWER_BURN ||
+            spellInfo->Effect[i] == SPELL_EFFECT_POWER_DRAIN ||
+            spellInfo->EffectApplyAuraName[i] == SPELL_AURA_PERIODIC_MANA_LEECH ||
+            spellInfo->EffectApplyAuraName[i] == SPELL_AURA_POWER_BURN_MANA) &&
+            int32(powerType) != spellInfo->EffectMiscValue[i])
+        {
+            continue;
+        }
+        return true;
+    }
+    return false;
+}
 
 inline bool NeedsComboPoints(SpellEntry const* spellInfo)
 {
@@ -464,15 +631,21 @@ inline uint32 GetSpellMechanicMask(SpellEntry const* spellInfo, uint32 effectMas
 {
     uint32 mask = 0;
     if (spellInfo->Mechanic)
-        { mask |= 1 << (spellInfo->Mechanic - 1); }
+    {
+        mask |= 1 << (spellInfo->Mechanic - 1);
+    }
 
     for (uint32 i = 0; i < MAX_EFFECT_INDEX; ++i)
     {
         if (!(effectMask & (1 << i)))
-            { continue; }
+        {
+            continue;
+        }
 
         if (spellInfo->EffectMechanic[i])
-            { mask |= 1 << (spellInfo->EffectMechanic[i] - 1); }
+        {
+            mask |= 1 << (spellInfo->EffectMechanic[i] - 1);
+        }
     }
 
     return mask;
@@ -482,19 +655,27 @@ inline uint32 GetAllSpellMechanicMask(SpellEntry const* spellInfo)
 {
     uint32 mask = 0;
     if (spellInfo->Mechanic)
-        { mask |= 1 << (spellInfo->Mechanic - 1); }
+    {
+        mask |= 1 << (spellInfo->Mechanic - 1);
+    }
     for (int i = 0; i < MAX_EFFECT_INDEX; ++i)
         if (spellInfo->EffectMechanic[i])
-            { mask |= 1 << (spellInfo->EffectMechanic[i] - 1); }
+        {
+            mask |= 1 << (spellInfo->EffectMechanic[i] - 1);
+        }
     return mask;
 }
 
 inline Mechanics GetEffectMechanic(SpellEntry const* spellInfo, SpellEffectIndex effect)
 {
     if (spellInfo->EffectMechanic[effect])
-        { return Mechanics(spellInfo->EffectMechanic[effect]); }
+    {
+        return Mechanics(spellInfo->EffectMechanic[effect]);
+    }
     if (spellInfo->Mechanic)
-        { return Mechanics(spellInfo->Mechanic); }
+    {
+        return Mechanics(spellInfo->Mechanic);
+    }
     return MECHANIC_NONE;
 }
 
@@ -502,19 +683,28 @@ inline uint32 GetDispellMask(DispelType dispel)
 {
     // If dispell all
     if (dispel == DISPEL_ALL)
-        { return DISPEL_ALL_MASK; }
+    {
+        return DISPEL_ALL_MASK;
+    }
     else
-        { return (1 << dispel); }
+    {
+        return (1 << dispel);
+    }
 }
 
 inline bool IsAuraAddedBySpell(uint32 auraType, uint32 spellId)
 {
     SpellEntry const* spellproto = sSpellStore.LookupEntry(spellId);
-    if (!spellproto) { return false; }
+    if (!spellproto)
+    {
+        return false;
+    }
 
     for (int i = 0; i < 3; i++)
         if (spellproto->EffectApplyAuraName[i] == auraType)
-            { return true; }
+        {
+            return true;
+        }
     return false;
 }
 
@@ -621,7 +811,7 @@ enum ProcFlagsEx
     /// If set trigger always but only one time (not used)
     PROC_EX_EX_ONE_TIME_TRIGGER = 0x0020000,
     /// For periodic heal
-    PROC_EX_PERIODIC_POSITIVE   = 0x0040000
+    PROC_EX_PERIODIC_POSITIVE   = 0x0040000,
 };
 
 struct SpellProcEventEntry
@@ -748,14 +938,20 @@ class PetAura
         {
             std::map<uint32, uint32>::const_iterator itr = auras.find(petEntry);
             if (itr != auras.end())
-                { return itr->second; }
+            {
+                return itr->second;
+            }
             else
             {
                 std::map<uint32, uint32>::const_iterator itr2 = auras.find(0);
                 if (itr2 != auras.end())
-                    { return itr2->second; }
+                {
+                    return itr2->second;
+                }
                 else
-                    { return 0; }
+                {
+                    return 0;
+                }
             }
         }
 
@@ -878,9 +1074,13 @@ class SpellMgr
         {
             SpellAffectMap::const_iterator itr = mSpellAffectMap.find((spellId << 8) + effectId);
             if (itr != mSpellAffectMap.end())
-                { return ClassFamilyMask(itr->second); }
+            {
+                return ClassFamilyMask(itr->second);
+            }
             if (SpellEntry const* spellEntry = sSpellStore.LookupEntry(spellId))
-                { return ClassFamilyMask(spellEntry->EffectItemType[effectId]); }
+            {
+                return ClassFamilyMask(spellEntry->EffectItemType[effectId]);
+            }
             return ClassFamilyMask();
         }
 
@@ -890,7 +1090,9 @@ class SpellMgr
         {
             SpellElixirMap::const_iterator itr = mSpellElixirs.find(spellid);
             if (itr == mSpellElixirs.end())
-                { return 0x0; }
+            {
+                return 0x0;
+            }
 
             return itr->second;
         }
@@ -901,18 +1103,26 @@ class SpellMgr
 
             // flasks must have all bits set from ELIXIR_FLASK_MASK
             if ((mask & ELIXIR_FLASK_MASK) == ELIXIR_FLASK_MASK)
-                { return SPELL_FLASK_ELIXIR; }
+            {
+                return SPELL_FLASK_ELIXIR;
+            }
             else if (mask & ELIXIR_WELL_FED)
-                { return SPELL_WELL_FED; }
+            {
+                return SPELL_WELL_FED;
+            }
             else
-                { return SPELL_NORMAL; }
+            {
+                return SPELL_NORMAL;
+            }
         }
 
         SpellThreatEntry const* GetSpellThreatEntry(uint32 spellid) const
         {
             SpellThreatMap::const_iterator itr = mSpellThreatMap.find(spellid);
             if (itr != mSpellThreatMap.end())
-                { return &itr->second; }
+            {
+                return &itr->second;
+            }
 
             return NULL;
         }
@@ -920,10 +1130,14 @@ class SpellMgr
         float GetSpellThreatMultiplier(SpellEntry const* spellInfo) const
         {
             if (!spellInfo)
-                { return 1.0f; }
+            {
+                return 1.0f;
+            }
 
             if (SpellThreatEntry const* entry = GetSpellThreatEntry(spellInfo->Id))
-                { return entry->multiplier; }
+            {
+                return entry->multiplier;
+            }
 
             return 1.0f;
         }
@@ -933,7 +1147,9 @@ class SpellMgr
         {
             SpellProcEventMap::const_iterator itr = mSpellProcEventMap.find(spellId);
             if (itr != mSpellProcEventMap.end())
-                { return &itr->second; }
+            {
+                return &itr->second;
+            }
             return NULL;
         }
 
@@ -942,7 +1158,9 @@ class SpellMgr
         {
             SpellProcItemEnchantMap::const_iterator itr = mSpellProcItemEnchantMap.find(spellid);
             if (itr == mSpellProcItemEnchantMap.end())
-                { return 0.0f; }
+            {
+                return 0.0f;
+            }
 
             return itr->second;
         }
@@ -955,7 +1173,9 @@ class SpellMgr
             // Lookup data
             SpellBonusMap::const_iterator itr = mSpellBonusMap.find(spellId);
             if (itr != mSpellBonusMap.end())
-                { return &itr->second; }
+            {
+                return &itr->second;
+            }
 
             return NULL;
         }
@@ -964,7 +1184,9 @@ class SpellMgr
         {
             SpellFacingFlagMap::const_iterator itr =  mSpellFacingFlagMap.find(spellId);
             if (itr != mSpellFacingFlagMap.end())
-                { return itr->second; }
+            {
+                return itr->second;
+            }
             return 0x0;
         }
 
@@ -973,7 +1195,9 @@ class SpellMgr
         {
             SpellTargetPositionMap::const_iterator itr = mSpellTargetPositions.find(spell_id);
             if (itr != mSpellTargetPositions.end())
-                { return &itr->second; }
+            {
+                return &itr->second;
+            }
             return NULL;
         }
 
@@ -982,7 +1206,9 @@ class SpellMgr
         {
             SpellChainMap::const_iterator itr = mSpellChains.find(spell_id);
             if (itr == mSpellChains.end())
-                { return NULL; }
+            {
+                return NULL;
+            }
 
             return &itr->second;
         }
@@ -990,7 +1216,9 @@ class SpellMgr
         uint32 GetFirstSpellInChain(uint32 spell_id) const
         {
             if (SpellChainNode const* node = GetSpellChainNode(spell_id))
-                { return node->first; }
+            {
+                return node->first;
+            }
 
             return spell_id;
         }
@@ -998,7 +1226,9 @@ class SpellMgr
         uint32 GetPrevSpellInChain(uint32 spell_id) const
         {
             if (SpellChainNode const* node = GetSpellChainNode(spell_id))
-                { return node->prev; }
+            {
+                return node->prev;
+            }
 
             return 0;
         }
@@ -1021,7 +1251,9 @@ class SpellMgr
         uint8 GetSpellRank(uint32 spell_id) const
         {
             if (SpellChainNode const* node = GetSpellChainNode(spell_id))
-                { return node->rank; }
+            {
+                return node->rank;
+            }
 
             return 0;
         }
@@ -1034,12 +1266,16 @@ class SpellMgr
 
             // not ordered correctly by rank value
             if (itr == mSpellChains.end() || !rank2 || itr->second.rank <= rank2)
-                { return false; }
+            {
+                return false;
+            }
 
             // check present in same rank chain
             for (; itr != mSpellChains.end(); itr = mSpellChains.find(itr->second.prev))
                 if (itr->second.prev == spell2)
-                    { return true; }
+                {
+                    return true;
+                }
 
             return false;
         }
@@ -1059,9 +1295,13 @@ class SpellMgr
         {
             SpellLearnSkillMap::const_iterator itr = mSpellLearnSkills.find(spell_id);
             if (itr != mSpellLearnSkills.end())
-                { return &itr->second; }
+            {
+                return &itr->second;
+            }
             else
-                { return NULL; }
+            {
+                return NULL;
+            }
         }
 
         bool IsSpellLearnSpell(uint32 spell_id) const
@@ -1079,7 +1319,9 @@ class SpellMgr
             SpellLearnSpellMapBounds bounds = GetSpellLearnSpellMapBounds(spell_id1);
             for (SpellLearnSpellMap::const_iterator i = bounds.first; i != bounds.second; ++i)
                 if (i->second.spell == spell_id2)
-                    { return true; }
+                {
+                    return true;
+                }
             return false;
         }
 
@@ -1107,9 +1349,13 @@ class SpellMgr
         {
             SpellPetAuraMap::const_iterator itr = mSpellPetAuraMap.find(spell_id);
             if (itr != mSpellPetAuraMap.end())
-                { return &itr->second; }
+            {
+                return &itr->second;
+            }
             else
-                { return NULL; }
+            {
+                return NULL;
+            }
         }
 
         SpellCastResult GetSpellAllowedInLocationError(SpellEntry const* spellInfo, uint32 map_id, uint32 zone_id, uint32 area_id, Player const* player = NULL);

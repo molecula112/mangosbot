@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -75,7 +75,9 @@ void SQLStorageBase::prepareToLoad(uint32 maxEntry, uint32 recordCount, uint32 r
 void SQLStorageBase::Free()
 {
     if (!m_data)
-        { return; }
+    {
+        return;
+    }
 
     uint32 offset = 0;
     for (uint32 x = 0; x < m_dstFieldCount; ++x)
@@ -88,7 +90,9 @@ void SQLStorageBase::Free()
             case DBC_FF_STRING:
             {
                 for (uint32 recordItr = 0; recordItr < m_recordCount; ++recordItr)
-                    { delete[] *(char**)((char*)(m_data + (recordItr * m_recordSize)) + offset); }
+                {
+                    delete[] *(char**)((char*)(m_data + (recordItr * m_recordSize)) + offset);
+                }
 
                 offset += sizeof(char*);
                 break;
@@ -193,7 +197,9 @@ void SQLHashStorage::EraseEntry(uint32 id)
     // do not erase from m_records
     RecordMap::iterator find = m_indexMap.find(id);
     if (find != m_indexMap.end())
-        { find->second = NULL; }
+    {
+        find->second = NULL;
+    }
 }
 
 SQLHashStorage::SQLHashStorage(const char* fmt, const char* _entry_field, const char* sqlname)

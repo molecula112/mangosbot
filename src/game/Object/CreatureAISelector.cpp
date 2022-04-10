@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,7 +42,9 @@ namespace FactorySelector
         // Allow scripting AI for normal creatures and not controlled pets (guardians and mini-pets)
         if ((!creature->IsPet() || !((Pet*)creature)->isControlled()) && !creature->IsCharmed())
             if (CreatureAI* scriptedAI = sScriptMgr.GetCreatureAI(creature))
-                { return scriptedAI; }
+            {
+                return scriptedAI;
+            }
 
         CreatureAIRegistry& ai_registry(CreatureAIRepository::Instance());
 
@@ -55,16 +57,24 @@ namespace FactorySelector
         Unit* owner = NULL;
         if ((creature->IsPet() && ((Pet*)creature)->isControlled() &&
              ((owner = creature->GetOwner()) && owner->GetTypeId() == TYPEID_PLAYER)) || creature->IsCharmed())
-            { ai_factory = ai_registry.GetRegistryItem("PetAI"); }
+        {
+            ai_factory = ai_registry.GetRegistryItem("PetAI");
+        }
         else if (creature->IsTotem())
-            { ai_factory = ai_registry.GetRegistryItem("TotemAI"); }
+        {
+            ai_factory = ai_registry.GetRegistryItem("TotemAI");
+        }
 
         // select by script name
         if (!ai_factory && !ainame.empty())
-            { ai_factory = ai_registry.GetRegistryItem(ainame.c_str()); }
+        {
+            ai_factory = ai_registry.GetRegistryItem(ainame.c_str());
+        }
 
         if (!ai_factory && creature->IsGuard())
-            { ai_factory = ai_registry.GetRegistryItem("GuardAI"); }
+        {
+            ai_factory = ai_registry.GetRegistryItem("GuardAI");
+        }
 
         // select by permit check
         if (!ai_factory)

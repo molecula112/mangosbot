@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,6 @@
 #include "World.h"
 #include "Log.h"
 
-
 AntiFreezeThread::AntiFreezeThread(uint32 delay) : delaytime_(delay)
 {
     m_loops = 0;
@@ -45,14 +44,16 @@ int AntiFreezeThread::open(void* unused)
 int AntiFreezeThread::svc(void)
 {
     if (!delaytime_)
-      { return 0; }
+    {
+        return 0;
+    }
 
-    sLog.outString("AntiFreeze Thread started (%u seconds max stuck time)", delaytime_/1000);
+    sLog.outString("AntiFreeze Thread started (%u seconds max stuck time)", delaytime_ / 1000);
     while (!World::IsStopped())
     {
         ACE_OS::sleep(1);
 
-        uint32 curtime = WorldTimer::getMSTime();
+        uint32 curtime = getMSTime();
 
         // normal work
         if (w_loops != World::m_worldLoopCounter.value())
@@ -61,12 +62,13 @@ int AntiFreezeThread::svc(void)
               w_loops = World::m_worldLoopCounter.value();
         }
         // possible freeze
-        else if (WorldTimer::getMSTimeDiff(w_lastchange, curtime) > delaytime_)
+        else if (getMSTimeDiff(w_lastchange, curtime) > delaytime_)
         {
             sLog.outError("World Thread hangs, kicking out server!");
             *((uint32 volatile*)NULL) = 0;          // bang crash
         }
     }
+
     sLog.outString("AntiFreeze Thread stopped.");
     return 0;
 }

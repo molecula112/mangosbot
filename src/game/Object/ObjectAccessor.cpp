@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,7 +41,6 @@
 INSTANTIATE_SINGLETON_2(ObjectAccessor, CLASS_LOCK);
 INSTANTIATE_CLASS_MUTEX(ObjectAccessor, ACE_Recursive_Thread_Mutex);
 
-
 ObjectAccessor::ObjectAccessor() : i_playerMap(), i_corpseMap(), i_corpseGuard()
 {
 }
@@ -59,13 +58,19 @@ Unit*
 ObjectAccessor::GetUnit(WorldObject const& u, ObjectGuid guid)
 {
     if (!guid)
-        { return nullptr; }
+    {
+        return nullptr;
+    }
 
     if (guid.IsPlayer())
-        { return FindPlayer(guid); }
+    {
+        return FindPlayer(guid);
+    }
 
     if (!u.IsInWorld())
-        { return nullptr; }
+    {
+        return nullptr;
+    }
 
     return u.GetMap()->GetAnyTypeCreature(guid);
 }
@@ -74,9 +79,13 @@ Corpse* ObjectAccessor::GetCorpseInMap(ObjectGuid guid, uint32 mapid)
 {
     Corpse* ret = i_corpseMap.Find(guid);
     if (!ret)
-        { return nullptr; }
+    {
+        return nullptr;
+    }
     if (ret->GetMapId() != mapid)
-        { return nullptr; }
+    {
+        return nullptr;
+    }
 
     return ret;
 }
@@ -84,11 +93,15 @@ Corpse* ObjectAccessor::GetCorpseInMap(ObjectGuid guid, uint32 mapid)
 Player* ObjectAccessor::FindPlayer(ObjectGuid guid, bool inWorld /*= true*/)
 {
     if (!guid)
-        { return nullptr; }
+    {
+        return nullptr;
+    }
 
     Player* plr = i_playerMap.Find(guid);
     if (!plr || (!plr->IsInWorld() && inWorld))
-        { return nullptr; }
+    {
+        return nullptr;
+    }
 
     return plr;
 }
@@ -98,7 +111,9 @@ Player* ObjectAccessor::FindPlayerByName(const char* name)
     ACE_READ_GUARD_RETURN(HashMapHolder<Player>::LockType, guard, i_playerMap.GetLock(), nullptr)
     for (auto& iter : i_playerMap.GetContainer())
         if (iter.second->IsInWorld() && (::strcmp(name, iter.second->GetName()) == 0))
-              { return iter.second; }
+        {
+            return iter.second;
+        }
     return nullptr;
 }
 
@@ -107,9 +122,12 @@ void ObjectAccessor::SaveAllPlayers()
 {
    SessionMap const& smap = sWorld.GetAllSessions();
    SessionMap::const_iterator iter;
-   for (iter = smap.begin(); iter != smap.end(); ++iter){
-       if (Player* player = iter->second->GetPlayer()){
-           if (player->IsInWorld()){
+   for (iter = smap.begin(); iter != smap.end(); ++iter)
+   {
+       if (Player* player = iter->second->GetPlayer())
+       {
+           if (player->IsInWorld())
+           {
                player->SaveToDB();
            }
        }
@@ -134,14 +152,15 @@ ObjectAccessor::GetCorpseForPlayerGUID(ObjectGuid guid)
     Player2CorpsesMapType::iterator iter = i_player2corpse.find(guid);
 
     if (iter == i_player2corpse.end())
-        { return nullptr; }
+    {
+        return nullptr;
+    }
 
     MANGOS_ASSERT(iter->second->GetType() != CORPSE_BONES);
     return iter->second;
 }
 
-void
-ObjectAccessor::RemoveCorpse(Corpse* corpse)
+void ObjectAccessor::RemoveCorpse(Corpse* corpse)
 {
     MANGOS_ASSERT(corpse && corpse->GetType() != CORPSE_BONES);
 
@@ -149,7 +168,9 @@ ObjectAccessor::RemoveCorpse(Corpse* corpse)
 
     Player2CorpsesMapType::iterator iter = i_player2corpse.find(corpse->GetOwnerGuid());
     if (iter == i_player2corpse.end())
-        { return; }
+    {
+        return;
+    }
 
     // build mapid*cellid -> guid_set map
     CellPair cell_pair = MaNGOS::ComputeCellPair(corpse->GetPositionX(), corpse->GetPositionY());
@@ -161,8 +182,7 @@ ObjectAccessor::RemoveCorpse(Corpse* corpse)
     i_player2corpse.erase(iter);
 }
 
-void
-ObjectAccessor::AddCorpse(Corpse* corpse)
+void ObjectAccessor::AddCorpse(Corpse* corpse)
 {
     MANGOS_ASSERT(corpse && corpse->GetType() != CORPSE_BONES);
 
@@ -201,8 +221,7 @@ ObjectAccessor::AddCorpsesToGrid(GridPair const& gridpair, GridType& grid, Map* 
       }
 }
 
-Corpse*
-ObjectAccessor::ConvertCorpseForPlayer(ObjectGuid player_guid, bool insignia)
+Corpse* ObjectAccessor::ConvertCorpseForPlayer(ObjectGuid player_guid, bool insignia)
 {
     Corpse* corpse = GetCorpseForPlayerGUID(player_guid);
     if (!corpse)
@@ -222,7 +241,9 @@ ObjectAccessor::ConvertCorpseForPlayer(ObjectGuid player_guid, bool insignia)
     // do not load the map if it's not loaded
     Map* map = sMapMgr.FindMap(corpse->GetMapId(), corpse->GetInstanceId());
     if (map)
-        { map->Remove(corpse, false); }
+    {
+        map->Remove(corpse, false);
+    }
 
     // remove corpse from DB
     corpse->DeleteFromDB();
@@ -239,7 +260,9 @@ ObjectAccessor::ConvertCorpseForPlayer(ObjectGuid player_guid, bool insignia)
         bones->Create(corpse->GetGUIDLow());
 
         for (int i = 3; i < CORPSE_END; ++i)                // don't overwrite guid and object type
-            { bones->SetUInt32Value(i, corpse->GetUInt32Value(i)); }
+        {
+            bones->SetUInt32Value(i, corpse->GetUInt32Value(i));
+        }
 
         bones->SetGrid(corpse->GetGrid());
         // bones->m_time = m_time;                          // don't overwrite time
@@ -253,7 +276,9 @@ ObjectAccessor::ConvertCorpseForPlayer(ObjectGuid player_guid, bool insignia)
         for (int i = 0; i < EQUIPMENT_SLOT_END; ++i)
         {
             if (corpse->GetUInt32Value(CORPSE_FIELD_ITEM + i))
-                { bones->SetUInt32Value(CORPSE_FIELD_ITEM + i, 0); }
+            {
+                bones->SetUInt32Value(CORPSE_FIELD_ITEM + i, 0);
+            }
         }
 
         // add bones in grid store if grid loaded where corpse placed
@@ -276,7 +301,9 @@ void ObjectAccessor::RemoveOldCorpses()
         ++next;
 
         if (!itr->second->IsExpired(now))
-            { continue; }
+        {
+            continue;
+        }
 
         ConvertCorpseForPlayer(itr->first);
     }
@@ -285,7 +312,9 @@ void ObjectAccessor::RemoveOldCorpses()
 Corpse* ObjectAccessor::FindCorpse(ObjectGuid guid)
 {
     if (!guid)
-        { return nullptr; }
+    {
+        return nullptr;
+    }
 
     return i_corpseMap.Find(guid);
 }

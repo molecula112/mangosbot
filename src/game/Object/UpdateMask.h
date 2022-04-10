@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,7 +60,9 @@ class UpdateMask
                 ClientUpdateMaskType maskPart = 0;
                 for (uint32 j = 0; j < CLIENT_UPDATE_MASK_BITS; ++j)
                     if (_bits[CLIENT_UPDATE_MASK_BITS * i + j])
+                    {
                         maskPart |= 1 << j;
+                    }
 
                 *data << maskPart;
             }
@@ -83,13 +85,17 @@ class UpdateMask
         void Clear()
         {
             if (_bits)
+            {
                 memset(_bits, 0, sizeof(uint8) * _blockCount * CLIENT_UPDATE_MASK_BITS);
+            }
         }
 
         UpdateMask& operator=(UpdateMask const& right)
         {
             if (this == &right)
+            {
                 return *this;
+            }
 
             SetCount(right.GetCount());
             memcpy(_bits, right._bits, sizeof(uint8) * _blockCount * CLIENT_UPDATE_MASK_BITS);
@@ -100,7 +106,9 @@ class UpdateMask
         {
             MANGOS_ASSERT(right.GetCount() <= GetCount());
             for (uint32 i = 0; i < _fieldCount; ++i)
+            {
                 _bits[i] &= right._bits[i];
+            }
 
             return *this;
         }
@@ -109,7 +117,9 @@ class UpdateMask
         {
             MANGOS_ASSERT(right.GetCount() <= GetCount());
             for (uint32 i = 0; i < _fieldCount; ++i)
+            {
                 _bits[i] |= right._bits[i];
+            }
 
             return *this;
         }

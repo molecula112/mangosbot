@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -90,11 +90,17 @@ void startDaemon(uint32_t timeout)
     }
 
     if (!freopen("/dev/null", "rt", stdin))
+    {
         exit(EXIT_FAILURE);
+    }
     if (!freopen("/dev/null", "wt", stdout))
+    {
         exit(EXIT_FAILURE);
+    }
     if (!freopen("/dev/null", "wt", stderr))
+    {
         exit(EXIT_FAILURE);
+    }
 }
 
 void stopDaemon()

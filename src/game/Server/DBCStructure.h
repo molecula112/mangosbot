@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -392,7 +392,9 @@ struct FactionEntry
         {
             if ((BaseRepRaceMask[i] == 0 || (BaseRepRaceMask[i] & raceMask)) &&
                 (BaseRepClassMask[i] == 0 || (BaseRepClassMask[i] & classMask)))
-                { return i; }
+            {
+                return i;
+            }
         }
 
         return -1;
@@ -430,10 +432,14 @@ struct FactionTemplateEntry
         {
             for (int i = 0; i < 4; ++i)
                 if (enemyFaction[i]  == entry.faction)
-                    { return false; }
+                {
+                    return false;
+                }
             for (int i = 0; i < 4; ++i)
                 if (friendFaction[i] == entry.faction)
-                    { return true; }
+                {
+                    return true;
+                }
         }
         return (friendlyMask & entry.ourMask) || (ourMask & entry.friendlyMask);
     }
@@ -443,10 +449,14 @@ struct FactionTemplateEntry
         {
             for (int i = 0; i < 4; ++i)
                 if (enemyFaction[i]  == entry.faction)
-                    { return true; }
+                {
+                    return true;
+                }
             for (int i = 0; i < 4; ++i)
                 if (friendFaction[i] == entry.faction)
-                    { return false; }
+                {
+                    return false;
+                }
         }
         return (hostileMask & entry.ourMask) != 0;
     }
@@ -455,7 +465,9 @@ struct FactionTemplateEntry
     {
         for (int i = 0; i < 4; ++i)
             if (enemyFaction[i] != 0)
-                { return false; }
+            {
+                return false;
+            }
         return hostileMask == 0 && friendlyMask == 0;
     }
     bool IsContestedGuardFaction() const { return (factionFlags & FACTION_TEMPLATE_FLAG_CONTESTED_GUARD) != 0; }
@@ -963,7 +975,9 @@ struct SpellEntry
         {
             for (uint8 i = EFFECT_INDEX_0; i <= EFFECT_INDEX_2; ++i)
                 if (Effect[i] == effect)
+                {
                     return true;
+                }
             return false;
         }
     private:

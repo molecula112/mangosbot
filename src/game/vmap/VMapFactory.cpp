@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -93,7 +93,9 @@ namespace VMAP
     void VMapFactory::preventSpellsFromBeingTestedForLoS(const char* pSpellIdString)
     {
         if (!iIgnoreSpellIds)
-            { iIgnoreSpellIds = new Table<unsigned int , bool>(); }
+        {
+            iIgnoreSpellIds = new Table<unsigned int , bool>();
+        }
         if (pSpellIdString != NULL)
         {
             unsigned int pos = 0;
@@ -119,7 +121,9 @@ namespace VMAP
     IVMapManager* VMapFactory::createOrGetVMapManager()
     {
         if (gVMapManager == 0)
-            { gVMapManager = new VMapManager2(); }              // should be taken from config ... Please change if you like :-)
+        {
+            gVMapManager = new VMapManager2();               // should be taken from config ... Please change if you like :-)
+        }
         return gVMapManager;
     }
 

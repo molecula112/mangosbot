@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,11 +36,15 @@ INSTANTIATE_SINGLETON_1(WaypointManager);
 bool WaypointBehavior::isEmpty()
 {
     if (emote || spell || model1 || model2)
-        { return false; }
+    {
+        return false;
+    }
 
     for (int i = 0; i < MAX_WAYPOINT_TEXT; ++i)
         if (textid[i])
-            { return false; }
+        {
+            return false;
+        }
 
     return true;
 }
@@ -52,7 +56,9 @@ WaypointBehavior::WaypointBehavior(const WaypointBehavior& b)
     model1 = b.model1;
     model2 = b.model2;
     for (int i = 0; i < MAX_WAYPOINT_TEXT; ++i)
-        { textid[i] = b.textid[i]; }
+    {
+        textid[i] = b.textid[i];
+    }
 }
 
 void WaypointManager::Load()
@@ -63,18 +69,22 @@ void WaypointManager::Load()
 
     ScriptChainMap const* scm = sScriptMgr.GetScriptChainMap(DBS_ON_CREATURE_MOVEMENT);
     if (!scm)
+    {
         return;
+    }
 
     std::set<uint32> movementScriptSet;
 
     for (ScriptChainMap::const_iterator itr = scm->begin(); itr != scm->end(); ++itr)
-        { movementScriptSet.insert(itr->first); }
+    {
+        movementScriptSet.insert(itr->first);
+    }
 
     // /////////////////////////////////////////////////////
     // creature_movement
     // /////////////////////////////////////////////////////
 
-    QueryResult* result = WorldDatabase.Query("SELECT id, COUNT(point) FROM creature_movement GROUP BY id");
+    QueryResult* result = WorldDatabase.Query("SELECT `id`, COUNT(`point`) FROM `creature_movement` GROUP BY `id`");
 
     if (!result)
     {
@@ -100,9 +110,9 @@ void WaypointManager::Load()
         delete result;
 
         //                                   0   1      2           3           4           5         6
-        result = WorldDatabase.Query("SELECT id, point, position_x, position_y, position_z, waittime, script_id,"
+        result = WorldDatabase.Query("SELECT `id`, `point`, `position_x`, `position_y`, `position_z`, `waittime`, `script_id`,"
                                      //   7        8        9        10       11       12     13     14           15      16
-                                     "textid1, textid2, textid3, textid4, textid5, emote, spell, orientation, model1, model2 FROM creature_movement");
+                                     "`textid1`, `textid2`, `textid3`, `textid4`, `textid5`, `emote`, `spell`, `orientation`, `model1`, `model2` FROM `creature_movement`");
 
         BarGoLink bar(result->GetRowCount());
 
@@ -126,7 +136,9 @@ void WaypointManager::Load()
             }
 
             if (cData->movementType != WAYPOINT_MOTION_TYPE)
-                { creatureNoMoveType.insert(id); }
+            {
+                creatureNoMoveType.insert(id);
+            }
 
             WaypointPath& path  = m_pathMap[id];
             WaypointNode& node  = path[point];
@@ -141,7 +153,7 @@ void WaypointManager::Load()
             // prevent using invalid coordinates
             if (!MaNGOS::IsValidMapCoord(node.x, node.y, node.z, node.orientation))
             {
-                QueryResult* result1 = WorldDatabase.PQuery("SELECT id, map FROM creature WHERE guid = '%u'", id);
+                QueryResult* result1 = WorldDatabase.PQuery("SELECT `id`, `map` FROM `creature` WHERE `guid` = '%u'", id);
                 if (result1)
                     sLog.outErrorDb("Creature (guidlow %d, entry %d) have invalid coordinates in his waypoint %d (X: %f, Y: %f).",
                                     id, result1->Fetch()[0].GetUInt32(), point, node.x, node.y);
@@ -158,7 +170,7 @@ void WaypointManager::Load()
                     delete result1;
                 }
 
-                WorldDatabase.PExecute("UPDATE creature_movement SET position_x = '%f', position_y = '%f', position_z = '%f' WHERE id = '%u' AND point = '%u'", node.x, node.y, node.z, id, point);
+                WorldDatabase.PExecute("UPDATE `creature_movement` SET `position_x` = '%f', `position_y` = '%f', `position_z` = '%f' WHERE `id` = '%u' AND `point` = '%u'", node.x, node.y, node.z, id, point);
             }
 
             if (node.script_id)
@@ -203,7 +215,9 @@ void WaypointManager::Load()
             if (be.emote)
             {
                 if (!sEmotesStore.LookupEntry(be.emote))
-                    { sLog.outErrorDb("Waypoint path %u (Point %u) are using emote %u, but emote does not exist.", id, point, be.emote); }
+                {
+                    sLog.outErrorDb("Waypoint path %u (Point %u) are using emote %u, but emote does not exist.", id, point, be.emote);
+                }
             }
 
             // save memory by not storing empty behaviors
@@ -213,7 +227,9 @@ void WaypointManager::Load()
                 ++total_behaviors;
             }
             else
-                { node.behavior = NULL; }
+            {
+                node.behavior = NULL;
+            }
         }
         while (result->NextRow());
 
@@ -227,7 +243,9 @@ void WaypointManager::Load()
                 ERROR_DB_STRICT_LOG("Table creature_movement has waypoint for creature guid %u (entry %u), but MovementType is not WAYPOINT_MOTION_TYPE(2). Make sure that this is actually used in a script!", *itr, cData->id);
 
                 if (cInfo->MovementType == WAYPOINT_MOTION_TYPE)
-                    { sLog.outErrorDb("    creature_template for this entry has MovementType WAYPOINT_MOTION_TYPE(2), did you intend to use creature_movement_template ?"); }
+                {
+                    sLog.outErrorDb("    creature_template for this entry has MovementType WAYPOINT_MOTION_TYPE(2), did you intend to use creature_movement_template ?");
+                }
             }
         }
 
@@ -241,7 +259,7 @@ void WaypointManager::Load()
     // creature_movement_template
     // /////////////////////////////////////////////////////
 
-    result = WorldDatabase.Query("SELECT entry, COUNT(point) FROM creature_movement_template GROUP BY entry");
+    result = WorldDatabase.Query("SELECT `entry`, COUNT(`point`) FROM `creature_movement_template` GROUP BY `entry`");
 
     if (!result)
     {
@@ -269,9 +287,9 @@ void WaypointManager::Load()
         delete result;
 
         //                                   0      1      2           3           4           5         6
-        result = WorldDatabase.Query("SELECT entry, point, position_x, position_y, position_z, waittime, script_id,"
+        result = WorldDatabase.Query("SELECT `entry`, `point`, `position_x`, `position_y`, `position_z`, `waittime`, `script_id`,"
                                      //   7        8        9        10       11       12     13     14           15      16
-                                     "textid1, textid2, textid3, textid4, textid5, emote, spell, orientation, model1, model2 FROM creature_movement_template");
+                                     "`textid1`, `textid2`, `textid3`, `textid4`, `textid5`, `emote`, `spell`, `orientation`, `model1`, `model2` FROM `creature_movement_template`");
 
         BarGoLink bar(result->GetRowCount());
 
@@ -313,7 +331,7 @@ void WaypointManager::Load()
                 sLog.outErrorDb("Table creature_movement_template for entry %u (point %u) are auto corrected to normalized position_x=%f, position_y=%f",
                                 entry, point, node.x, node.y);
 
-                WorldDatabase.PExecute("UPDATE creature_movement_template SET position_x = '%f', position_y = '%f' WHERE entry = %u AND point = %u", node.x, node.y, entry, point);
+                WorldDatabase.PExecute("UPDATE `creature_movement_template` SET `position_x` = '%f', `position_y` = '%f' WHERE `entry` = %u AND `point` = %u", node.x, node.y, entry, point);
             }
 
             if (node.script_id)
@@ -356,7 +374,9 @@ void WaypointManager::Load()
             if (be.emote)
             {
                 if (!sEmotesStore.LookupEntry(be.emote))
-                    { sLog.outErrorDb("Waypoint template path %u (point %u) are using emote %u, but emote does not exist.", entry, point, be.emote); }
+                {
+                    sLog.outErrorDb("Waypoint template path %u (point %u) are using emote %u, but emote does not exist.", entry, point, be.emote);
+                }
             }
 
             // save memory by not storing empty behaviors
@@ -366,7 +386,9 @@ void WaypointManager::Load()
                 ++total_behaviors;
             }
             else
-                { node.behavior   = NULL; }
+            {
+                node.behavior   = NULL;
+            }
         }
         while (result->NextRow());
 
@@ -379,7 +401,9 @@ void WaypointManager::Load()
     if (!movementScriptSet.empty())
     {
         for (std::set<uint32>::const_iterator itr = movementScriptSet.begin(); itr != movementScriptSet.end(); ++itr)
-            { sLog.outErrorDb("Table `dbscripts_on_creature_movement` contain unused script, id %u.", *itr); }
+        {
+            sLog.outErrorDb("Table `db_scripts` (on creature movement) contain unused script, id %u.", *itr);
+        }
         sLog.outString();
     }
 }
@@ -387,15 +411,21 @@ void WaypointManager::Load()
 void WaypointManager::Unload()
 {
     for (WaypointPathMap::iterator itr = m_pathMap.begin(); itr != m_pathMap.end(); ++itr)
-        { _clearPath(itr->second); }
+    {
+        _clearPath(itr->second);
+    }
     m_pathMap.clear();
 
     for (WaypointPathMap::iterator itr = m_pathTemplateMap.begin(); itr != m_pathTemplateMap.end(); ++itr)
-        { _clearPath(itr->second); }
+    {
+        _clearPath(itr->second);
+    }
     m_pathTemplateMap.clear();
 
     for (WaypointPathMap::iterator itr = m_externalPathTemplateMap.begin(); itr != m_externalPathTemplateMap.end(); ++itr)
-        { _clearPath(itr->second); }
+    {
+        _clearPath(itr->second);
+    }
     m_externalPathTemplateMap.clear();
 
 }
@@ -403,7 +433,9 @@ void WaypointManager::Unload()
 void WaypointManager::_clearPath(WaypointPath& path)
 {
     for (WaypointPath::const_iterator itr = path.begin(); itr != path.end(); ++itr)
-        { delete itr->second.behavior; }
+    {
+        delete itr->second.behavior;
+    }
     path.clear();
 }
 
@@ -431,7 +463,9 @@ WaypointNode const* WaypointManager::AddNode(uint32 entry, uint32 dbGuid, uint32
 {
     // Support only normal movement tables
     if (wpDest != PATH_FROM_GUID && wpDest != PATH_FROM_ENTRY)
+    {
         return NULL;
+    }
 
     // Prepare information
     char const* const table     = wpDest == PATH_FROM_GUID ? "creature_movement" : "creature_movement_template";
@@ -442,9 +476,13 @@ WaypointNode const* WaypointManager::AddNode(uint32 entry, uint32 dbGuid, uint32
     WaypointPath& path = (*wpMap)[key];
 
     if (pointId == 0 && !path.empty())                      // Start with highest waypoint
+    {
         pointId = path.rbegin()->first + 1;
+    }
     else if (pointId == 0)
+    {
         pointId = 1;
+    }
 
     uint32 nextPoint = pointId;
     WaypointNode temp = WaypointNode(x, y, z, 100, 0, 0, NULL);
@@ -468,10 +506,12 @@ WaypointNode const* WaypointManager::AddNode(uint32 entry, uint32 dbGuid, uint32
     for (WaypointPath::reverse_iterator rItr = path.rbegin(); rItr != path.rend() && rItr->first > pointId; ++rItr)
     {
         if (rItr->first <= nextPoint)
-            WorldDatabase.PExecuteLog("UPDATE %s SET point=point+1 WHERE %s=%u AND point=%u", table, key_field, key, rItr->first - 1);
+        {
+            WorldDatabase.PExecuteLog("UPDATE `%s` SET `point`=`point`+1 WHERE `%s`=%u AND `point`=%u", table, key_field, key, rItr->first - 1);
+        }
     }
     // Insert new Point to database
-    WorldDatabase.PExecuteLog("INSERT INTO %s (%s,point,position_x,position_y,position_z,orientation) VALUES (%u,%u, %f,%f,%f, 100)", table, key_field, key, pointId, x, y, z);
+    WorldDatabase.PExecuteLog("INSERT INTO `%s` (`%s`,`point`,`position_x`,`position_y`,`position_z`,`orientation`) VALUES (%u,%u, %f,%f,%f, 100)", table, key_field, key, pointId, x, y, z);
 
     return &path[pointId];
 }
@@ -480,26 +520,32 @@ void WaypointManager::DeleteNode(uint32 entry, uint32 dbGuid, uint32 point, int3
 {
     // Support only normal movement tables
     if (wpOrigin != PATH_FROM_GUID && wpOrigin != PATH_FROM_ENTRY)
+    {
         return;
+    }
 
     WaypointPath* path = GetPathFromOrigin(entry, dbGuid, pathId, wpOrigin);
     if (!path)
+    {
         return;
+    }
 
     char const* const table     = wpOrigin == PATH_FROM_GUID ? "creature_movement" : "creature_movement_template";
     char const* const key_field = wpOrigin == PATH_FROM_GUID ? "id" : "entry";
     uint32 const key            = wpOrigin == PATH_FROM_GUID ? dbGuid : entry;
-    WorldDatabase.PExecuteLog("DELETE FROM %s WHERE %s=%u AND point=%u", table, key_field, key, point);
+    WorldDatabase.PExecuteLog("DELETE FROM `%s` WHERE `%s`=%u AND `point`=%u", table, key_field, key, point);
 
     path->erase(point);
 }
 
 void WaypointManager::DeletePath(uint32 id)
 {
-    WorldDatabase.PExecuteLog("DELETE FROM creature_movement WHERE id=%u", id);
+    WorldDatabase.PExecuteLog("DELETE FROM `creature_movement` WHERE `id`=%u", id);
     WaypointPathMap::iterator itr = m_pathMap.find(id);
     if (itr != m_pathMap.end())
-        { _clearPath(itr->second); }
+    {
+        _clearPath(itr->second);
+    }
     // the path is not removed from the map, just cleared
     // WMGs have pointers to the path, so deleting them would crash
     // this wastes some memory, but these functions are
@@ -510,16 +556,20 @@ void WaypointManager::SetNodePosition(uint32 entry, uint32 dbGuid, uint32 point,
 {
     // Support only normal movement tables
     if (wpOrigin != PATH_FROM_GUID && wpOrigin != PATH_FROM_ENTRY)
-        { return; }
+    {
+        return;
+    }
 
     WaypointPath* path = GetPathFromOrigin(entry, dbGuid, pathId, wpOrigin);
     if (!path)
-        { return; }
+    {
+        return;
+    }
 
     char const* const table     = wpOrigin == PATH_FROM_GUID ? "creature_movement" : "creature_movement_template";
     char const* const key_field = wpOrigin == PATH_FROM_GUID ? "id" : "entry";
     uint32 const key            = wpOrigin == PATH_FROM_GUID ? dbGuid : entry;
-    WorldDatabase.PExecuteLog("UPDATE %s SET position_x=%f, position_y=%f, position_z=%f WHERE %s=%u AND point=%u", table, x, y, z, key_field, key, point);
+    WorldDatabase.PExecuteLog("UPDATE `%s` SET `position_x`=%f, `position_y`=%f, `position_z`=%f WHERE `%s`=%u AND `point`=%u", table, x, y, z, key_field, key, point);
 
     WaypointPath::iterator find = path->find(point);
     if (find != path->end())
@@ -534,40 +584,52 @@ void WaypointManager::SetNodeWaittime(uint32 entry, uint32 dbGuid, uint32 point,
 {
     // Support only normal movement tables
     if (wpOrigin != PATH_FROM_GUID && wpOrigin != PATH_FROM_ENTRY)
+    {
         return;
+    }
 
     WaypointPath* path = GetPathFromOrigin(entry, dbGuid, pathId, wpOrigin);
     if (!path)
+    {
         return;
+    }
 
     char const* const table     = wpOrigin == PATH_FROM_GUID ? "creature_movement" : "creature_movement_template";
     char const* const key_field = wpOrigin == PATH_FROM_GUID ? "id" : "entry";
     uint32 const key            = wpOrigin == PATH_FROM_GUID ? dbGuid : entry;
-    WorldDatabase.PExecuteLog("UPDATE %s SET waittime=%u WHERE %s=%u AND point=%u", table, waittime, key_field, key, point);
+    WorldDatabase.PExecuteLog("UPDATE `%s` SET `waittime`=%u WHERE `%s`=%u AND `point`=%u", table, waittime, key_field, key, point);
 
     WaypointPath::iterator find = path->find(point);
     if (find != path->end())
+    {
         find->second.delay = waittime;
+    }
 }
 
 void WaypointManager::SetNodeOrientation(uint32 entry, uint32 dbGuid, uint32 point, int32 pathId, WaypointPathOrigin wpOrigin, float orientation)
 {
     // Support only normal movement tables
     if (wpOrigin != PATH_FROM_GUID && wpOrigin != PATH_FROM_ENTRY)
+    {
         return;
+    }
 
     WaypointPath* path = GetPathFromOrigin(entry, dbGuid, pathId, wpOrigin);
     if (!path)
+    {
         return;
+    }
 
     char const* const table     = wpOrigin == PATH_FROM_GUID ? "creature_movement" : "creature_movement_template";
     char const* const key_field = wpOrigin == PATH_FROM_GUID ? "id" : "entry";
     uint32 const key            = wpOrigin == PATH_FROM_GUID ? dbGuid : entry;
-    WorldDatabase.PExecuteLog("UPDATE %s SET orientation=%f WHERE %s=%u AND point=%u", table, orientation, key_field, key, point);
+    WorldDatabase.PExecuteLog("UPDATE `%s` SET `orientation`=%f WHERE `%s`=%u AND `point`=%u", table, orientation, key_field, key, point);
 
     WaypointPath::iterator find = path->find(point);
     if (find != path->end())
+    {
         find->second.orientation = orientation;
+    }
 }
 
 /// return true if a valid scriptId is provided
@@ -575,24 +637,32 @@ bool WaypointManager::SetNodeScriptId(uint32 entry, uint32 dbGuid, uint32 point,
 {
     // Support only normal movement tables
     if (wpOrigin != PATH_FROM_GUID && wpOrigin != PATH_FROM_ENTRY)
+    {
         return false;
+    }
 
     WaypointPath* path = GetPathFromOrigin(entry, dbGuid, pathId, wpOrigin);
     if (!path)
+    {
         return false;
+    }
 
     char const* const table     = wpOrigin == PATH_FROM_GUID ? "creature_movement" : "creature_movement_template";
     char const* const key_field = wpOrigin == PATH_FROM_GUID ? "id" : "entry";
     uint32 const key            = wpOrigin == PATH_FROM_GUID ? dbGuid : entry;
-    WorldDatabase.PExecuteLog("UPDATE %s SET script_id=%u WHERE %s=%u AND point=%u", table, scriptId, key_field, key, point);
+    WorldDatabase.PExecuteLog("UPDATE `%s` SET `script_id`=%u WHERE `%s`=%u AND `point`=%u", table, scriptId, key_field, key, point);
 
     WaypointPath::iterator find = path->find(point);
     if (find != path->end())
+    {
         find->second.script_id = scriptId;
+    }
 
     ScriptChainMap const* scm = sScriptMgr.GetScriptChainMap(DBS_ON_CREATURE_MOVEMENT);
     if (!scm)
+    {
         return false;
+    }
 
     return scm->find(scriptId) != scm->end();
 }
@@ -633,13 +703,17 @@ void WaypointManager::CheckTextsExistance(std::set<int32>& ids)
     {
         for (WaypointPath::const_iterator pItr = pmItr->second.begin(); pItr != pmItr->second.end(); ++pItr)
             if (pItr->second.behavior)
-                { CheckWPText(false, pmItr->first, pItr->first, pItr->second.behavior, ids); }
+            {
+                CheckWPText(false, pmItr->first, pItr->first, pItr->second.behavior, ids);
+            }
     }
 
     for (WaypointPathMap::const_iterator pmItr = m_pathTemplateMap.begin(); pmItr != m_pathTemplateMap.end(); ++pmItr)
     {
         for (WaypointPath::const_iterator pItr = pmItr->second.begin(); pItr != pmItr->second.end(); ++pItr)
             if (pItr->second.behavior)
-                { CheckWPText(true, pmItr->first, pItr->first, pItr->second.behavior, ids); }
+            {
+                CheckWPText(true, pmItr->first, pItr->first, pItr->second.behavior, ids);
+            }
     }
 }

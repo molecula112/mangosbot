@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  * Copyright (C) 2008-2015 TrinityCore <http://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -39,6 +39,7 @@
 #include "WardenWin.h"
 #include "WardenModuleWin.h"
 #include "WardenCheckMgr.h"
+#include "GameTime.h"
 
 WardenWin::WardenWin() : Warden(), _serverTicks(0) {}
 
@@ -156,7 +157,7 @@ void WardenWin::HandleHashResult(ByteBuffer &buff)
     _inputCrypto.Init(_inputKey);
     _outputCrypto.Init(_outputKey);
 
-    _previousTimestamp = WorldTimer::getMSTime();
+    _previousTimestamp = GameTime::GetGameTimeMS();
 }
 
 void WardenWin::RequestData()
@@ -170,12 +171,16 @@ void WardenWin::RequestData()
 
     // If all checks were done, fill the todo list again
     if (_memChecksTodo.empty())
+    {
         sWardenCheckMgr->GetWardenCheckIds(true, build, _memChecksTodo);
+    }
 
     if (_otherChecksTodo.empty())
+    {
         sWardenCheckMgr->GetWardenCheckIds(false, build, _otherChecksTodo);
+    }
 
-    _serverTicks = WorldTimer::getMSTime();
+    _serverTicks = GameTime::GetGameTimeMS();
 
     _currentChecks.clear();
 
@@ -184,7 +189,9 @@ void WardenWin::RequestData()
     {
         // If todo list is done break loop (will be filled on next Update() run)
         if (_memChecksTodo.empty())
+        {
             break;
+        }
 
         // Get check id from the end and remove it from todo
         id = _memChecksTodo.back();
@@ -201,7 +208,9 @@ void WardenWin::RequestData()
     {
         // If todo list is done break loop (will be filled on next Update() run)
         if (_otherChecksTodo.empty())
+        {
             break;
+        }
 
         // Get check id from the end and remove it from todo
         id = _otherChecksTodo.back();
@@ -308,7 +317,9 @@ void WardenWin::RequestData()
     std::stringstream stream;
     stream << "Sent check id's: ";
     for (std::list<uint16>::iterator itr = _currentChecks.begin(); itr != _currentChecks.end(); ++itr)
+    {
         stream << *itr << " ";
+    }
 
     sLog.outWarden("%s", stream.str().c_str());
 
@@ -345,7 +356,7 @@ void WardenWin::HandleData(ByteBuffer &buff)
         uint32 newClientTicks;
         buff >> newClientTicks;
 
-        uint32 ticksNow = WorldTimer::getMSTime();
+        uint32 ticksNow = GameTime::GetGameTimeMS();
         uint32 ourTicks = newClientTicks + (ticksNow - _serverTicks);
 
         sLog.outWarden("ServerTicks %u, RequestTicks %u, ClientTicks %u", ticksNow, _serverTicks, newClientTicks);  // Now, At request, At response
@@ -398,11 +409,17 @@ void WardenWin::HandleData(ByteBuffer &buff)
                 if (memcmp(buff.contents() + buff.rpos(), &byte, sizeof(uint8)) != 0)
                 {
                     if (type == PAGE_CHECK_A || type == PAGE_CHECK_B)
+                    {
                         sLog.outWarden("RESULT PAGE_CHECK fail, CheckId %u account Id %u", *itr, _session->GetAccountId());
+                    }
                     if (type == MODULE_CHECK)
+                    {
                         sLog.outWarden("RESULT MODULE_CHECK fail, CheckId %u account Id %u", *itr, _session->GetAccountId());
+                    }
                     if (type == DRIVER_CHECK)
+                    {
                         sLog.outWarden("RESULT DRIVER_CHECK fail, CheckId %u account Id %u", *itr, _session->GetAccountId());
+                    }
                     checkFailed = *itr;
                     buff.rpos(buff.rpos() + 1);
                     continue;
@@ -410,11 +427,17 @@ void WardenWin::HandleData(ByteBuffer &buff)
 
                 buff.rpos(buff.rpos() + 1);
                 if (type == PAGE_CHECK_A || type == PAGE_CHECK_B)
+                {
                     sLog.outWarden("RESULT PAGE_CHECK passed CheckId %u account Id %u", *itr, _session->GetAccountId());
+                }
                 else if (type == MODULE_CHECK)
+                {
                     sLog.outWarden("RESULT MODULE_CHECK passed CheckId %u account Id %u", *itr, _session->GetAccountId());
+                }
                 else if (type == DRIVER_CHECK)
+                {
                     sLog.outWarden("RESULT DRIVER_CHECK passed CheckId %u account Id %u", *itr, _session->GetAccountId());
+                }
                 break;
             }
             case LUA_STR_CHECK:

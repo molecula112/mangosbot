@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ struct DBVersion
     std::string dbname;
     uint32 expected_version;
     uint32 expected_structure;
-    uint32 expected_content;
+    uint32 minimal_expected_content; // Minimal because core can starts with some missing contents
     std::string description;
 };
 
@@ -62,7 +62,9 @@ void SqlConnection::FreePreparedStatements()
 
     size_t nStmts = m_holder.size();
     for (size_t i = 0; i < nStmts; ++i)
-        { delete m_holder[i]; }
+    {
+        delete m_holder[i];
+    }
 
     m_holder.clear();
 }
@@ -71,7 +73,9 @@ SqlPreparedStatement* SqlConnection::GetStmt(uint32 nIndex)
 {
     // resize stmt container
     if (m_holder.size() <= nIndex)
-        { m_holder.resize(nIndex + 1, NULL); }
+    {
+        m_holder.resize(nIndex + 1, NULL);
+    }
 
     SqlPreparedStatement* pStmt = NULL;
 
@@ -94,7 +98,9 @@ SqlPreparedStatement* SqlConnection::GetStmt(uint32 nIndex)
         m_holder[nIndex] = pStmt;
     }
     else
-        { pStmt = m_holder[nIndex]; }
+    {
+        pStmt = m_holder[nIndex];
+    }
 
     return pStmt;
 }
@@ -102,7 +108,9 @@ SqlPreparedStatement* SqlConnection::GetStmt(uint32 nIndex)
 bool SqlConnection::ExecuteStmt(int nIndex, const SqlStmtParameters& id)
 {
     if (nIndex == -1)
-        { return false; }
+    {
+        return false;
+    }
 
     // get prepared statement object
     SqlPreparedStatement* pStmt = GetStmt(nIndex);
@@ -127,7 +135,9 @@ bool Database::Initialize(const char* infoString, int nConns /*= 1*/)
     if (!m_logsDir.empty())
     {
         if ((m_logsDir.at(m_logsDir.length() - 1) != '/') && (m_logsDir.at(m_logsDir.length() - 1) != '\\'))
-            { m_logsDir.append("/"); }
+        {
+            m_logsDir.append("/");
+        }
     }
 
     m_pingIntervallms = sConfig.GetIntDefault("MaxPingTime", 30) * (MINUTE * 1000);
@@ -136,11 +146,17 @@ bool Database::Initialize(const char* infoString, int nConns /*= 1*/)
 
     // setup connection pool size
     if (nConns < MIN_CONNECTION_POOL_SIZE)
-        { m_nQueryConnPoolSize = MIN_CONNECTION_POOL_SIZE; }
+    {
+        m_nQueryConnPoolSize = MIN_CONNECTION_POOL_SIZE;
+    }
     else if (nConns > MAX_CONNECTION_POOL_SIZE)
-        { m_nQueryConnPoolSize = MAX_CONNECTION_POOL_SIZE; }
+    {
+        m_nQueryConnPoolSize = MAX_CONNECTION_POOL_SIZE;
+    }
     else
-        { m_nQueryConnPoolSize = nConns; }
+    {
+        m_nQueryConnPoolSize = nConns;
+    }
 
     // create connection pool for sync requests
     for (int i = 0; i < m_nQueryConnPoolSize; ++i)
@@ -158,7 +174,9 @@ bool Database::Initialize(const char* infoString, int nConns /*= 1*/)
     // create and initialize connection for async requests
     m_pAsyncConn = CreateConnection();
     if (!m_pAsyncConn->Initialize(infoString))
-        { return false; }
+    {
+        return false;
+    }
 
     m_pResultQueue = new SqlResultQueue;
 
@@ -177,7 +195,9 @@ void Database::StopServer()
     m_pAsyncConn = NULL;
 
     for (size_t i = 0; i < m_pQueryConnections.size(); ++i)
-        { delete m_pQueryConnections[i]; }
+    {
+        delete m_pQueryConnections[i];
+    }
 
     m_pQueryConnections.clear();
 }
@@ -200,7 +220,10 @@ void Database::InitDelayThread()
 
 void Database::HaltDelayThread()
 {
-    if (!m_threadBody || !m_delayThread) { return; }
+    if (!m_threadBody || !m_delayThread)
+    {
+        return;
+    }
 
     m_threadBody->Stop();                                   // Stop event
     m_delayThread->wait();                                  // Wait for flush to DB
@@ -222,13 +245,17 @@ void Database::ThreadEnd()
 void Database::ProcessResultQueue()
 {
     if (m_pResultQueue)
-        { m_pResultQueue->Update(); }
+    {
+        m_pResultQueue->Update();
+    }
 }
 
 void Database::escape_string(std::string& str)
 {
     if (str.empty())
-        { return; }
+    {
+        return;
+    }
 
     char* buf = new char[str.size() * 2 + 1];
     // we don't care what connection to use - escape string will be the same
@@ -242,9 +269,13 @@ SqlConnection* Database::getQueryConnection()
     int nCount = 0;
 
     if (m_nQueryCounter == long(1 << 31))
-        { m_nQueryCounter = 0; }
+    {
+        m_nQueryCounter = 0;
+    }
     else
-        { nCount = ++m_nQueryCounter; }
+    {
+        nCount = ++m_nQueryCounter;
+    }
 
     return m_pQueryConnections[nCount % m_nQueryConnPoolSize];
 }
@@ -268,7 +299,9 @@ void Database::Ping()
 bool Database::PExecuteLog(const char* format, ...)
 {
     if (!format)
-        { return false; }
+    {
+        return false;
+    }
 
     va_list ap;
     char szQuery [MAX_QUERY_LEN];
@@ -311,7 +344,10 @@ bool Database::PExecuteLog(const char* format, ...)
 
 QueryResult* Database::PQuery(const char* format, ...)
 {
-    if (!format) { return NULL; }
+    if (!format)
+    {
+        return NULL;
+    }
 
     va_list ap;
     char szQuery [MAX_QUERY_LEN];
@@ -330,7 +366,10 @@ QueryResult* Database::PQuery(const char* format, ...)
 
 QueryNamedResult* Database::PQueryNamed(const char* format, ...)
 {
-    if (!format) { return NULL; }
+    if (!format)
+    {
+        return NULL;
+    }
 
     va_list ap;
     char szQuery [MAX_QUERY_LEN];
@@ -350,7 +389,9 @@ QueryNamedResult* Database::PQueryNamed(const char* format, ...)
 bool Database::Execute(const char* sql)
 {
     if (!m_pAsyncConn)
-        { return false; }
+    {
+        return false;
+    }
 
     SqlTransaction* pTrans = (*m_TransStorage)->get();
     if (pTrans)
@@ -362,7 +403,9 @@ bool Database::Execute(const char* sql)
     {
         // if async execution is not available
         if (!m_bAllowAsyncTransactions)
-            { return DirectExecute(sql); }
+        {
+            return DirectExecute(sql);
+        }
 
         // Simple sql statement
         m_threadBody->Delay(new SqlPlainRequest(sql));
@@ -374,7 +417,9 @@ bool Database::Execute(const char* sql)
 bool Database::PExecute(const char* format, ...)
 {
     if (!format)
-        { return false; }
+    {
+        return false;
+    }
 
     va_list ap;
     char szQuery [MAX_QUERY_LEN];
@@ -394,7 +439,9 @@ bool Database::PExecute(const char* format, ...)
 bool Database::DirectPExecute(const char* format, ...)
 {
     if (!format)
-        { return false; }
+    {
+        return false;
+    }
 
     va_list ap;
     char szQuery [MAX_QUERY_LEN];
@@ -414,7 +461,9 @@ bool Database::DirectPExecute(const char* format, ...)
 bool Database::BeginTransaction()
 {
     if (!m_pAsyncConn)
-        { return false; }
+    {
+        return false;
+    }
 
     // initiate transaction on current thread
     // currently we do not support queued transactions
@@ -425,15 +474,21 @@ bool Database::BeginTransaction()
 bool Database::CommitTransaction()
 {
     if (!m_pAsyncConn)
-        { return false; }
+    {
+        return false;
+    }
 
     // check if we have pending transaction
     if (!(*m_TransStorage)->get())
-        { return false; }
+    {
+        return false;
+    }
 
     // if async execution is not available
     if (!m_bAllowAsyncTransactions)
-        { return CommitTransactionDirect(); }
+    {
+        return CommitTransactionDirect();
+    }
 
     // add SqlTransaction to the async queue
     m_threadBody->Delay((*m_TransStorage)->detach());
@@ -443,11 +498,15 @@ bool Database::CommitTransaction()
 bool Database::CommitTransactionDirect()
 {
     if (!m_pAsyncConn)
-        { return false; }
+    {
+        return false;
+    }
 
     // check if we have pending transaction
     if (!(*m_TransStorage)->get())
-        { return false; }
+    {
+        return false;
+    }
 
     // directly execute SqlTransaction
     SqlTransaction* pTrans = (*m_TransStorage)->detach();
@@ -460,10 +519,14 @@ bool Database::CommitTransactionDirect()
 bool Database::RollbackTransaction()
 {
     if (!m_pAsyncConn)
-        { return false; }
+    {
+        return false;
+    }
 
     if (!(*m_TransStorage)->get())
-        { return false; }
+    {
+        return false;
+    }
 
     // remove scheduled transaction
     (*m_TransStorage)->reset();
@@ -471,82 +534,134 @@ bool Database::RollbackTransaction()
     return true;
 }
 
+void PrintNormalYouHaveDatabaseVersion(uint32 current_db_version, uint32 current_db_structure, uint32 current_db_content, std::string description)
+{
+    sLog.outString("  [A] You have database Version: %u", current_db_version);
+    sLog.outString("                      Structure: %u", current_db_structure);
+    sLog.outString("                        Content: %u", current_db_content);
+    sLog.outString("                    Description: %s", description.c_str());
+}
+
+void PrintErrorYouHaveDatabaseVersion(uint32 current_db_version, uint32 current_db_structure, uint32 current_db_content, std::string description)
+{
+    sLog.outErrorDb("  [A] You have database Version: %u", current_db_version);
+    sLog.outErrorDb("                      Structure: %u", current_db_structure);
+    sLog.outErrorDb("                        Content: %u", current_db_content);
+    sLog.outErrorDb("                    Description: %s", description.c_str());
+}
+
+void PrintNormalDatabaseVersionReferencedByCore(const DBVersion& core_db_requirements)
+{
+    sLog.outString("  [B] The core references last database Version: %u", core_db_requirements.expected_version);
+    sLog.outString("                                      Structure: %u", core_db_requirements.expected_structure);
+    sLog.outString("                                        Content: %u", core_db_requirements.minimal_expected_content);
+    sLog.outString("                                    Description: %s", core_db_requirements.description.c_str());
+}
+
+void PrintErrorYouNeedDatabaseVersionExpectedByCore(const DBVersion& core_db_requirements)
+{
+    sLog.outErrorDb("  [B] The core needs database Version: %u", core_db_requirements.expected_version);
+    sLog.outErrorDb("                            Structure: %u", core_db_requirements.expected_structure);
+    sLog.outErrorDb("                              Content: %u", core_db_requirements.minimal_expected_content);
+    sLog.outErrorDb("                          Description: %s", core_db_requirements.description.c_str());
+}
+
 bool Database::CheckDatabaseVersion(DatabaseTypes database)
 {
-    const DBVersion& dbversion = databaseVersions[database];
+    const DBVersion& core_db_requirements = databaseVersions[database];
 
     // Fetch the database version table information
-    QueryResult* result = Query("SELECT version, structure, content, description FROM db_version ORDER BY version DESC, structure DESC, content DESC LIMIT 1");
+    QueryResult* result = Query("SELECT `version`, `structure`, `content`, `description` FROM `db_version` ORDER BY `version` DESC, `structure` DESC, `content` DESC LIMIT 1");
 
     // db_version table does not exist or is empty
     if (!result)
-    { 
-        sLog.outErrorDb("The table `db_version` in your [%s] database is missing or corrupt.", dbversion.dbname.c_str());
+    {
+        sLog.outErrorDb("The table `db_version` in your [%s] database is missing or corrupt.", core_db_requirements.dbname.c_str());
         sLog.outErrorDb();
         sLog.outErrorDb("  [A] You have database Version: MaNGOS can not verify your database version or its existence!");
         sLog.outErrorDb();
-        sLog.outErrorDb("  [B] You need database Version: %u", dbversion.expected_version);
-        sLog.outErrorDb("                      Structure: %u", dbversion.expected_structure);
-        sLog.outErrorDb("                        Content: %u", dbversion.expected_content);
-        sLog.outErrorDb("                    Description: %s", dbversion.description.c_str());
+        PrintErrorYouNeedDatabaseVersionExpectedByCore(core_db_requirements);
         sLog.outErrorDb();
         sLog.outErrorDb("Please verify your database location or your database integrity.");
+
+        // The core loading will no go further :
         return false;
     }
 
     Field* fields = result->Fetch();
-    uint32 version = fields[0].GetUInt32();
-    uint32 structure = fields[1].GetUInt32();
-    uint32 content = fields[2].GetUInt32();
+    uint32 current_db_version = fields[0].GetUInt32();
+    uint32 current_db_structure = fields[1].GetUInt32();
+    uint32 current_db_content = fields[2].GetUInt32();
     std::string description = fields[3].GetCppString();
 
     delete result;
 
     // Structure does not match the required version
-    if (version != dbversion.expected_version || structure != dbversion.expected_structure)
+    if (current_db_version != core_db_requirements.expected_version || current_db_structure != core_db_requirements.expected_structure)
     {
-        sLog.outErrorDb("The table `db_version` indicates that your [%s] database does not match the expected structure!", dbversion.dbname.c_str());
+        sLog.outErrorDb("The table `db_version` indicates that your [%s] database does not match the expected structure!", core_db_requirements.dbname.c_str());
         sLog.outErrorDb();
-        sLog.outErrorDb("  [A] You have database Version: %u", version);
-        sLog.outErrorDb("                      Structure: %u", structure);
-        sLog.outErrorDb("                        Content: %u", content);
-        sLog.outErrorDb("                    Description: %s", description.c_str());
+        PrintErrorYouHaveDatabaseVersion(current_db_version, current_db_structure, current_db_content, description);
         sLog.outErrorDb();
-        sLog.outErrorDb("  [B] You need database Version: %u", dbversion.expected_version);
-        sLog.outErrorDb("                      Structure: %u", dbversion.expected_structure);
-        sLog.outErrorDb("                        Content: %u", dbversion.expected_content);
-        sLog.outErrorDb("                    Description: %s", dbversion.description.c_str());
+        PrintErrorYouNeedDatabaseVersionExpectedByCore(core_db_requirements);
         sLog.outErrorDb();
         sLog.outErrorDb("You must apply all updates after [A] to [B] to use MaNGOS with this database.");
-        sLog.outErrorDb("These updates are included in the database/%s/Updates folder.", dbversion.dbname.c_str());
+        sLog.outErrorDb("These updates are included in the database/%s/Updates folder.", core_db_requirements.dbname.c_str());
         return false;
     }
 
-    // DB is not up to date, but structure is correct. Send warning but start core
-    if (content > dbversion.expected_content)
+    bool db_vs_core_content_version_mismatch = false;
+
+    // DB is not up to date, but structure is correct.
+    // The 'content' version in the 'db_version' table can be < from the one required by the core
+    // See  enum values for :
+    //  WORLD_DB_CONTENT_NR
+    //  CHAR_DB_CONTENT_NR
+    //  REALMD_DB_CONTENT_NR
+    // for more information.
+    if (current_db_content < core_db_requirements.minimal_expected_content)
     {
-        sLog.outErrorDb("You have not updated the core for few DB [%s] updates!", dbversion.dbname.c_str());
-        sLog.outErrorDb("Current DB content is %u, core expects %u", content, dbversion.expected_content);
-        sLog.outErrorDb("This is ok for now but should not last long.");
-    }
-    else if (content != dbversion.expected_content) 
-    {
-        sLog.outErrorDb("The table `db_version` indicates that your [%s] database does not match the expected version!", dbversion.dbname.c_str());
-        sLog.outErrorDb();
-        sLog.outErrorDb("  [A] You have database Version: %u", version);
-        sLog.outErrorDb("                      Structure: %u", structure);
-        sLog.outErrorDb("                        Content: %u", content);
-        sLog.outErrorDb("                    Description: %s", description.c_str());
-        sLog.outErrorDb();
-        sLog.outErrorDb("  [B] You need database Version: %u", dbversion.expected_version);
-        sLog.outErrorDb("                      Structure: %u", dbversion.expected_structure);
-        sLog.outErrorDb("                        Content: %u", dbversion.expected_content);
-        sLog.outErrorDb("                    Description: %s", dbversion.description.c_str());
-        sLog.outErrorDb();
-        sLog.outErrorDb("You are missing content updates or you have content updates beyond the expected core version.");
+        // TODO : Should not display with error color but warning (e.g YELLOW) => Create a sLog.outWarningDb() and sLog.outWarning()
+        sLog.outErrorDb("You have not updated the core for few DB [%s] updates!", core_db_requirements.dbname.c_str());
+        sLog.outErrorDb("Current DB content is %u, core expects %u", current_db_content, core_db_requirements.minimal_expected_content);
         sLog.outErrorDb("It is recommended to run ALL database updates up to the required core version.");
-        sLog.outErrorDb("These updates are included in the database/%s/Updates folder.", dbversion.dbname.c_str());
-    };
+        sLog.outErrorDb("These updates are included in the database/%s/Updates folder.", core_db_requirements.dbname.c_str());
+        sLog.outErrorDb("This is ok for now but should not last long.");
+        db_vs_core_content_version_mismatch = true;
+    }
+
+    // Do not alert if current_db_content > core_db_requirements.minimal_expected_content it can mislead newcomers !
+
+    // In anys cases if there are differences in content : output a recap of the differences :
+    if (db_vs_core_content_version_mismatch)
+    {
+        // TODO : Should not display with error color but warning (e.g YELLOW) => Create a sLog.outWarningDb() and sLog.outWarning()
+        sLog.outErrorDb("The table `db_version` indicates that your [%s] database does not match the expected version!", core_db_requirements.dbname.c_str());
+        sLog.outErrorDb();
+        PrintErrorYouHaveDatabaseVersion(current_db_version, current_db_structure, current_db_content, description);
+        sLog.outErrorDb();
+        PrintErrorYouNeedDatabaseVersionExpectedByCore(core_db_requirements);
+    }
+    else
+    {
+        if (current_db_version == core_db_requirements.expected_version && current_db_structure == core_db_requirements.expected_structure)
+        {
+            sLog.outString("The table `db_version` indicates that your [%s] database hase the same version as the core requirements.", core_db_requirements.dbname.c_str());
+            sLog.outString();
+        }
+        else
+        {
+            sLog.outString("The table `db_version` indicates that your [%s] database has a higher version than the one referenced by the core."
+                "\nYou have probably applied DB updates, and that's a good thing to keep your server up to date.", core_db_requirements.dbname.c_str());
+            sLog.outString();
+            PrintNormalYouHaveDatabaseVersion(current_db_version, current_db_structure, current_db_content, description);
+            sLog.outString();
+            PrintNormalDatabaseVersionReferencedByCore(core_db_requirements);
+            sLog.outString();
+            sLog.outString("You can run the core without any problem like that.");
+            sLog.outString();
+        }
+    }
 
     return true;
 }
@@ -554,7 +669,9 @@ bool Database::CheckDatabaseVersion(DatabaseTypes database)
 bool Database::ExecuteStmt(const SqlStatementID& id, SqlStmtParameters* params)
 {
     if (!m_pAsyncConn)
-        { return false; }
+    {
+        return false;
+    }
 
     SqlTransaction* pTrans = (*m_TransStorage)->get();
     if (pTrans)
@@ -566,7 +683,9 @@ bool Database::ExecuteStmt(const SqlStatementID& id, SqlStmtParameters* params)
     {
         // if async execution is not available
         if (!m_bAllowAsyncTransactions)
-            { return DirectExecuteStmt(id, params); }
+        {
+            return DirectExecuteStmt(id, params);
+        }
 
         // Simple sql statement
         m_threadBody->Delay(new SqlPreparedRequest(id.ID(), params));
@@ -578,7 +697,7 @@ bool Database::ExecuteStmt(const SqlStatementID& id, SqlStmtParameters* params)
 bool Database::DirectExecuteStmt(const SqlStatementID& id, SqlStmtParameters* params)
 {
     MANGOS_ASSERT(params);
-    std::auto_ptr<SqlStmtParameters> p(params);
+    std::shared_ptr<SqlStmtParameters> p(params);
     // execute statement
     SqlConnection::Lock _guard(getAsyncConnection());
     return _guard->ExecuteStmt(id.ID(), *params);
@@ -604,7 +723,9 @@ SqlStatement Database::CreateStatement(SqlStatementID& index, const char* fmt)
             m_stmtRegistry[szFmt] = nId;
         }
         else
-            { nId = iter->second; }
+        {
+            nId = iter->second;
+        }
 
         // save initialized statement index info
         index.init(nId, nParams);
@@ -616,7 +737,9 @@ SqlStatement Database::CreateStatement(SqlStatementID& index, const char* fmt)
 std::string Database::GetStmtString(const int stmtId) const
 {
     if (stmtId == -1 || stmtId > m_iStmtIndex)
-        { return std::string(); }
+    {
+        return std::string();
+    }
 
     LOCK_GUARD _guard(m_stmtGuard);
     if (_guard.locked())
@@ -625,7 +748,9 @@ std::string Database::GetStmtString(const int stmtId) const
         for (PreparedStmtRegistry::const_iterator iter = m_stmtRegistry.begin(); iter != iter_last; ++iter)
         {
             if (iter->second == stmtId)
-                { return iter->first; }
+            {
+                return iter->first;
+            }
         }
     }
     return std::string();

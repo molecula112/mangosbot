@@ -1,7 +1,7 @@
 # MaNGOS is a full featured server for World of Warcraft, supporting
 # the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
 #
-# Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+# Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -56,6 +56,10 @@ source_group("References" FILES ${SRC_GRP_REFERENCES})
 #Server group
 file(GLOB SRC_GRP_SERVER Server/*.cpp Server/*.h)
 source_group("Server" FILES ${SRC_GRP_SERVER})
+
+#Time group
+file(GLOB SRC_GRP_TIME Time/*.cpp Time/*.h)
+source_group("Time" FILES ${SRC_GRP_TIME})
 
 #Tools group
 file(GLOB SRC_GRP_TOOL Tools/*.cpp Tools/*.h)
@@ -132,6 +136,7 @@ add_library(game STATIC
     ${SRC_GRP_OUTDOOR_PVP}
     ${SRC_GRP_REFERENCES}
     ${SRC_GRP_SERVER}
+    ${SRC_GRP_TIME}
     ${SRC_GRP_TOOL}
     ${SRC_GRP_VMAPS}
     ${SRC_GRP_WARDEN}
@@ -156,6 +161,7 @@ target_include_directories(game
         OutdoorPvP
         References
         Server
+        Time
         Tools
         vmap
         Warden
@@ -205,9 +211,4 @@ install(
     DIRECTORY ${CMAKE_SOURCE_DIR}/src/modules/Eluna/extensions
     DESTINATION ${BIN_DIR}/lua_scripts
 )
-endif()
-
-if(PLAYERBOTS)
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/aiplayerbot.conf.dist
-    DESTINATION ${CONF_INSTALL_DIR})
 endif()

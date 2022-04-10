@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,16 +46,22 @@ void ByteBufferException::PrintPosError() const
 void ByteBuffer::print_storage() const
 {
     if (!sLog.HasLogLevelOrHigher(LOG_LVL_DEBUG))   // optimize disabled debug output
-        { return; }
+    {
+        return;
+    }
 
     std::ostringstream ss;
     ss <<  "STORAGE_SIZE: " << size() << "\n";
 
     if (sLog.IsIncludeTime())
-        { ss << "         "; }
+    {
+        ss << "         ";
+    }
 
     for (size_t i = 0; i < size(); ++i)
-        { ss << uint32(read<uint8>(i)) << " - "; }
+    {
+        ss << uint32(read<uint8>(i)) << " - ";
+    }
 
     sLog.outDebug("%s", ss.str().c_str());
 }
@@ -63,16 +69,22 @@ void ByteBuffer::print_storage() const
 void ByteBuffer::textlike() const
 {
     if (!sLog.HasLogLevelOrHigher(LOG_LVL_DEBUG))   // optimize disabled debug output
-        { return; }
+    {
+        return;
+    }
 
     std::ostringstream ss;
     ss <<  "STORAGE_SIZE: " << size() << "\n";
 
     if (sLog.IsIncludeTime())
-        { ss << "         "; }
+    {
+        ss << "         ";
+    }
 
     for (size_t i = 0; i < size(); ++i)
-        { ss << read<uint8>(i); }
+    {
+        ss << read<uint8>(i);
+    }
 
     sLog.outDebug("%s", ss.str().c_str());
 }
@@ -80,13 +92,17 @@ void ByteBuffer::textlike() const
 void ByteBuffer::hexlike() const
 {
     if (!sLog.HasLogLevelOrHigher(LOG_LVL_DEBUG))   // optimize disabled debug output
-        { return; }
+    {
+        return;
+    }
 
     std::ostringstream ss;
     ss <<  "STORAGE_SIZE: " << size() << "\n";
 
     if (sLog.IsIncludeTime())
-        { ss << "         "; }
+    {
+        ss << "         ";
+    }
 
     size_t j = 1, k = 1;
 
@@ -102,7 +118,9 @@ void ByteBuffer::hexlike() const
             ss << "\n";
 
             if (sLog.IsIncludeTime())
-                { ss << "         "; }
+            {
+                ss << "         ";
+            }
 
             ++k;
             ++j;

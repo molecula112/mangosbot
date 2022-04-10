@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -424,7 +424,9 @@ class ByteBuffer
             {
                 char c = read<char>();
                 if (c == 0)
-                    { break; }
+                {
+                    break;
+                }
                 value += c;
             }
             return *this;
@@ -508,7 +510,9 @@ class ByteBuffer
         void read_skip(size_t skip)
         {
             if (_rpos + skip > size())
-                { throw ByteBufferException(false, _rpos, skip, size()); }
+            {
+                throw ByteBufferException(false, _rpos, skip, size());
+            }
             _rpos += skip;
         }
 
@@ -533,8 +537,17 @@ class ByteBuffer
         template <typename T> T read(size_t pos) const
         {
             if (pos + sizeof(T) > size())
-                { throw ByteBufferException(false, pos, sizeof(T), size()); }
+            {
+                throw ByteBufferException(false, pos, sizeof(T), size());
+            }
+#if defined(__arm__)
+            // ARM has alignment issues, we need to use memcpy to avoid them
+            T val;
+            memcpy((void*)&val, (void*)&_storage[pos], sizeof(T));
+#else
             T val = *((T const*)&_storage[pos]);
+#endif
+
             EndianConvert(val);
             return val;
         }
@@ -548,7 +561,9 @@ class ByteBuffer
         void read(uint8* dest, size_t len)
         {
             if (_rpos  + len > size())
-                { throw ByteBufferException(false, _rpos, len, size()); }
+            {
+                throw ByteBufferException(false, _rpos, len, size());
+            }
             memcpy(dest, &_storage[_rpos], len);
             _rpos += len;
         }
@@ -617,7 +632,9 @@ class ByteBuffer
         void reserve(size_t ressize)
         {
             if (ressize > size())
-                { _storage.reserve(ressize); }
+            {
+                _storage.reserve(ressize);
+            }
         }
 
         /**
@@ -661,12 +678,16 @@ class ByteBuffer
         void append(const uint8* src, size_t cnt)
         {
             if (!cnt)
-                { return; }
+            {
+                return;
+            }
 
             MANGOS_ASSERT(size() < 10000000);
 
             if (_storage.size() < _wpos + cnt)
-                { _storage.resize(_wpos + cnt); }
+            {
+                _storage.resize(_wpos + cnt);
+            }
             memcpy(&_storage[_wpos], src, cnt);
             _wpos += cnt;
         }
@@ -679,7 +700,9 @@ class ByteBuffer
         void append(const ByteBuffer& buffer)
         {
             if (buffer.wpos())
-                { append(buffer.contents(), buffer.wpos()); }
+            {
+                append(buffer.contents(), buffer.wpos());
+            }
         }
 
         /**
@@ -733,7 +756,9 @@ class ByteBuffer
         void put(size_t pos, const uint8* src, size_t cnt)
         {
             if (pos + cnt > size())
-                { throw ByteBufferException(true, pos, cnt, size()); }
+            {
+                throw ByteBufferException(true, pos, cnt, size());
+            }
             memcpy(&_storage[pos], src, cnt);
         }
 

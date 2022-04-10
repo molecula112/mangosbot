@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,9 @@
 int GuardAI::Permissible(const Creature* creature)
 {
     if (creature->IsGuard())
-        { return PERMIT_BASE_SPECIAL; }
+    {
+        return PERMIT_BASE_SPECIAL;
+    }
 
     return PERMIT_BASE_NO;
 }
@@ -43,7 +45,9 @@ void GuardAI::MoveInLineOfSight(Unit* u)
 {
     // Ignore Z for flying creatures
     if (!m_creature->CanFly() && m_creature->GetDistanceZ(u) > CREATURE_Z_ATTACK_RANGE)
-        { return; }
+    {
+        return;
+    }
 
     if (!m_creature->getVictim() && u->IsTargetableForAttack() &&
         (u->IsHostileToPlayers() || m_creature->IsHostileTo(u) /*|| u->getVictim() && m_creature->IsFriendlyTo(u->getVictim())*/) &&
@@ -105,16 +109,28 @@ void GuardAI::EnterEvadeMode()
 
     // Remove ChaseMovementGenerator from MotionMaster stack list, and add HomeMovementGenerator instead
     if (m_creature->GetMotionMaster()->GetCurrentMovementGeneratorType() == CHASE_MOTION_TYPE)
-        { m_creature->GetMotionMaster()->MoveTargetedHome(); }
+    {
+        m_creature->GetMotionMaster()->MoveTargetedHome();
+    }
+
+    // Reset back to default spells template. This also resets timers.
+    SetSpellsList(m_creature->GetCreatureInfo()->SpellListId);
 }
 
-void GuardAI::UpdateAI(const uint32 /*diff*/)
+void GuardAI::UpdateAI(const uint32 diff)
 {
     // update i_victimGuid if i_creature.getVictim() !=0 and changed
     if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-        { return; }
+    {
+        return;
+    }
 
     i_victimGuid = m_creature->getVictim()->GetObjectGuid();
+
+    if (!m_CreatureSpells.empty())
+    {
+        UpdateSpellsList(diff);
+    }
 
     DoMeleeAttackIfReady();
 }
@@ -128,7 +144,9 @@ bool GuardAI::IsVisible(Unit* pl) const
 void GuardAI::AttackStart(Unit* u)
 {
     if (!u)
-        { return; }
+    {
+        return;
+    }
 
     if (m_creature->Attack(u, true))
     {
@@ -144,5 +162,7 @@ void GuardAI::AttackStart(Unit* u)
 void GuardAI::JustDied(Unit* killer)
 {
     if (Player* pkiller = killer->GetCharmerOrOwnerPlayerOrPlayerItself())
-        { m_creature->SendZoneUnderAttackMessage(pkiller); }
+    {
+        m_creature->SendZoneUnderAttackMessage(pkiller);
+    }
 }

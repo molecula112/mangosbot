@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -71,14 +71,20 @@ namespace VMAP
     void ModelInstance::GetAreaInfo(const G3D::Vector3& p, AreaInfo& info) const
     {
         if (!iModel)
+        {
             return;
+        }
 
         // M2 files don't contain area info, only WMO files
         if (flags & MOD_M2)
-            { return; }
+        {
+            return;
+        }
 
         if (!iBound.contains(p))
-            { return; }
+        {
+            return;
+        }
 
         // child bounds are defined in object space:
         Vector3 pModel = iInvRot * (p - iPos) * iInvScale;
@@ -102,14 +108,20 @@ namespace VMAP
     bool ModelInstance::GetLocationInfo(const G3D::Vector3& p, LocationInfo& info) const
     {
         if (!iModel)
+        {
             return false;
+        }
 
         // M2 files don't contain area info, only WMO files
         if (flags & MOD_M2)
-            { return false; }
+        {
+            return false;
+        }
 
         if (!iBound.contains(p))
-            { return false; }
+        {
+            return false;
+        }
 
         // child bounds are defined in object space:
         Vector3 pModel = iInvRot * (p - iPos) * iInvScale;
@@ -158,7 +170,9 @@ namespace VMAP
         if (!check)
         {
             if (ferror(rf))
-                { ERROR_LOG("Error reading ModelSpawn!"); }
+            {
+                ERROR_LOG("Error reading ModelSpawn!");
+            }
             return false;
         }
         check += fread(&spawn.adtId, sizeof(uint16), 1, rf);
@@ -213,9 +227,15 @@ namespace VMAP
         }
         uint32 nameLen = spawn.name.length();
         check += fwrite(&nameLen, sizeof(uint32), 1, wf);
-        if (check != uint32(has_bound ? 17 : 11)) { return false; }
+        if (check != uint32(has_bound ? 17 : 11))
+        {
+            return false;
+        }
         check = fwrite(spawn.name.c_str(), sizeof(char), nameLen, wf);
-        if (check != nameLen) { return false; }
+        if (check != nameLen)
+        {
+            return false;
+        }
         return true;
     }
 }

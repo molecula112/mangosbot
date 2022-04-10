@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -85,7 +85,9 @@ class DBCStorage
             {
                 typename std::map<uint32, T const*>::const_iterator it = data.find(id);
                 if (it != data.end())
+                {
                     return it->second;
+                }
             }
             return (id >= nCount) ? NULL : indexTable[id];
         }
@@ -100,7 +102,9 @@ class DBCStorage
             DBCFileLoader dbc;
             // Check if load was sucessful, only then continue
             if (!dbc.Load(fn, fmt))
-                { return false; }
+            {
+                return false;
+            }
 
             fieldCount = dbc.GetCols();
 
@@ -122,7 +126,9 @@ class DBCStorage
                 {
                     T const* node = LookupEntry(i);
                     if (!node)
+                    {
                         continue;
+                    }
                     data[i] = node;
                 }
                 loaded = true;
@@ -140,12 +146,16 @@ class DBCStorage
         {
             // DBC must be already loaded using Load
             if (!indexTable)
-                { return false; }
+            {
+                return false;
+            }
 
             DBCFileLoader dbc;
             // Check if load was successful, only then continue
             if (!dbc.Load(fn, fmt))
-                { return false; }
+            {
+                return false;
+            }
 
             // load strings from another locale dbc data
             m_stringPoolList.push_back(dbc.AutoProduceStrings(fmt, (char*)m_dataTable));
@@ -166,7 +176,9 @@ class DBCStorage
             }
 
             if (!indexTable)
-                { return; }
+            {
+                return;
+            }
 
             delete[]((char*)indexTable);
             indexTable = NULL;

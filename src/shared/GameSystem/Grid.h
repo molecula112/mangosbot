@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,31 +53,59 @@ class Grid
     public:
 
         template<class SPECIFIC_OBJECT>
+        /**
+         * @brief an object of interested enters the grid
+         *
+         * @param obj
+         * @return bool
+         */
         bool AddWorldObject(SPECIFIC_OBJECT* obj)
         {
             return i_worldContainer.template insert<SPECIFIC_OBJECT>(obj);
         }
 
         template<class SPECIFIC_OBJECT>
+        /**
+         * @brief an object of interested exits the grid
+         *
+         * @param obj
+         * @return bool
+         */
         bool RemoveWorldObject(SPECIFIC_OBJECT* obj)
         {
             return i_worldContainer.template remove<SPECIFIC_OBJECT>(obj);
         }
 
         template<class SPECIFIC_OBJECT>
+        /**
+         * @brief Inserts a container type object into the grid.
+         *
+         * @param obj
+         * @return bool
+         */
         bool AddGridObject(SPECIFIC_OBJECT* obj)
         {
             if (obj->IsActiveObject())
-                { m_activeGridObjects.insert(obj); }
+            {
+                m_activeGridObjects.insert(obj);
+            }
 
             return i_gridContainer.template insert<SPECIFIC_OBJECT>(obj);
         }
 
         template<class SPECIFIC_OBJECT>
+        /**
+         * @brief Removes a container type object from the grid
+         *
+         * @param obj
+         * @return bool
+         */
         bool RemoveGridObject(SPECIFIC_OBJECT* obj)
         {
             if (obj->IsActiveObject())
-                { m_activeGridObjects.erase(obj); }
+            {
+                m_activeGridObjects.erase(obj);
+            }
 
             return i_gridContainer.template remove<SPECIFIC_OBJECT>(obj);
         }

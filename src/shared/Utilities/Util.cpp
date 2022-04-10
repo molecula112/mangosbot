@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,49 +27,9 @@
 
 #include "utf8.h"
 #include "RNGen.h"
-#include <ace/TSS_T.h>
-#include <ace/INET_Addr.h>
 #include "Log/Log.h"
 
-static ACE_Time_Value g_SystemTickTime = ACE_OS::gettimeofday();
-
-uint32 WorldTimer::m_iTime = 0;
-uint32 WorldTimer::m_iPrevTime = 0;
-
-uint32 WorldTimer::tickTime() { return m_iTime; }
-uint32 WorldTimer::tickPrevTime() { return m_iPrevTime; }
-
-uint32 WorldTimer::tick()
-{
-    // save previous world tick time
-    m_iPrevTime = m_iTime;
-
-    // get the new one and don't forget to persist current system time in m_SystemTickTime
-    m_iTime = WorldTimer::getMSTime_internal();
-
-    // return tick diff
-    return getMSTimeDiff(m_iPrevTime, m_iTime);
-}
-
-uint32 WorldTimer::getMSTime()
-{
-    return getMSTime_internal();
-}
-
-uint32 WorldTimer::getMSTime_internal()
-{
-    // get current time
-    const ACE_Time_Value currTime = ACE_OS::gettimeofday();
-    // calculate time diff between two world ticks
-    // special case: curr_time < old_time - we suppose that our time has not ticked at all
-    // this should be constant value otherwise it is possible that our time can start ticking backwards until next world tick!!!
-    uint64 diff = 0;
-    (currTime - g_SystemTickTime).msec(diff);
-
-    // lets calculate current world time
-    uint32 iRes = uint32(diff % UI64LIT(0x00000000FFFFFFFF));
-    return iRes;
-}
+#include <iomanip>
 
 //////////////////////////////////////////////////////////////////////////
 int32 irand(int32 min, int32 max)
@@ -120,7 +80,10 @@ Tokens StrSplit(const std::string& src, const std::string& sep)
     {
         if (sep.find(*i) != std::string::npos)
         {
-            if (s.length()) { r.push_back(s); }
+            if (s.length())
+            {
+                r.push_back(s);
+            }
             s = "";
         }
         else
@@ -128,14 +91,19 @@ Tokens StrSplit(const std::string& src, const std::string& sep)
             s += *i;
         }
     }
-    if (s.length()) { r.push_back(s); }
+    if (s.length())
+    {
+        r.push_back(s);
+    }
     return r;
 }
 
 uint32 GetUInt32ValueFromArray(Tokens const& data, uint16 index)
 {
     if (index >= data.size())
-        { return 0; }
+    {
+        return 0;
+    }
 
     return (uint32)atoi(data[index].c_str());
 }
@@ -169,18 +137,35 @@ void stripLineInvisibleChars(std::string& str)
         else
         {
             if (wpos != pos)
-                { str[wpos++] = str[pos]; }
+            {
+                str[wpos++] = str[pos];
+            }
             else
-                { ++wpos; }
+            {
+                ++wpos;
+            }
             space = false;
         }
     }
 
     if (wpos < str.size())
-        { str.erase(wpos, str.size()); }
+    {
+        str.erase(wpos, str.size());
+    }
 }
 
-std::string secsToTimeString(time_t timeInSecs, bool shortText, bool hoursOnly)
+std::tm localtime_r(const time_t& time)
+{
+    std::tm tm_snapshot;
+#if (defined(WIN32) || defined(_WIN32) || defined(__WIN32__))
+    localtime_s(&tm_snapshot, &time);
+#else
+    localtime_r(&time, &tm_snapshot); // POSIX
+#endif
+    return tm_snapshot;
+}
+
+std::string secsToTimeString(time_t timeInSecs, TimeFormat timeFormat, bool hoursOnly)
 {
     time_t secs    = timeInSecs % MINUTE;
     time_t minutes = timeInSecs % HOUR / MINUTE;
@@ -189,15 +174,109 @@ std::string secsToTimeString(time_t timeInSecs, bool shortText, bool hoursOnly)
 
     std::ostringstream ss;
     if (days)
-        { ss << days << (shortText ? "d" : " Day(s) "); }
+    {
+        ss << days;
+        if (timeFormat == TimeFormat::Numeric)
+        {
+            ss << ":";
+        }
+        else if (timeFormat == TimeFormat::ShortText)
+        {
+            ss << "d";
+        }
+        else // if (timeFormat == TimeFormat::FullText)
+        {
+            if (days == 1)
+            {
+                ss << " Day ";
+            }
+            else
+            {
+                ss << " Days ";
+            }
+        }
+    }
+
     if (hours || hoursOnly)
-        { ss << hours << (shortText ? "h" : " Hour(s) "); }
+    {
+        ss << hours;
+        if (timeFormat == TimeFormat::Numeric)
+        {
+            ss << ":";
+        }
+        else if (timeFormat == TimeFormat::ShortText)
+        {
+            ss << "h";
+        }
+        else // if (timeFormat == TimeFormat::FullText)
+        {
+            if (hours <= 1)
+            {
+                ss << " Hour ";
+            }
+            else
+            {
+                ss << " Hours ";
+            }
+        }
+    }
+
     if (!hoursOnly)
     {
-        if (minutes)
-            { ss << minutes << (shortText ? "m" : " Minute(s) "); }
-        if (secs || (!days && !hours && !minutes))
-            { ss << secs << (shortText ? "s" : " Second(s)."); }
+        ss << minutes;
+        if (timeFormat == TimeFormat::Numeric)
+        {
+            ss << ":";
+        }
+        else if (timeFormat == TimeFormat::ShortText)
+        {
+            ss << "m";
+        }
+        else // if (timeFormat == TimeFormat::FullText)
+        {
+            if (minutes == 1)
+            {
+                ss << " Minute ";
+            }
+            else
+            {
+                ss << " Minutes ";
+            }
+        }
+    }
+    else
+    {
+        if (timeFormat == TimeFormat::Numeric)
+        {
+            ss << "0:";
+        }
+    }
+
+    if (secs || (!days && !hours && !minutes))
+    {
+        ss << std::setw(2) << std::setfill('0') << secs;
+        if (timeFormat == TimeFormat::ShortText)
+        {
+            ss << "s";
+        }
+        else if (timeFormat == TimeFormat::FullText)
+        {
+            if (secs <= 1)
+            {
+                ss << " Second.";
+            }
+            else
+            {
+                ss << " Seconds.";
+            }
+        }
+    }
+    else
+    {
+        if (timeFormat == TimeFormat::Numeric)
+        {
+            ss << "00";
+        }
     }
 
     return ss.str();
@@ -237,7 +316,7 @@ uint32 TimeStringToSecs(const std::string& timestring)
 
 std::string TimeToTimestampStr(time_t t)
 {
-    tm* aTm = localtime(&t);
+    tm aTm = localtime_r(t);
     //       YYYY   year
     //       MM     month (2 digits 01-12)
     //       DD     day (2 digits 01-31)
@@ -245,7 +324,7 @@ std::string TimeToTimestampStr(time_t t)
     //       MM     minutes (2 digits 00-59)
     //       SS     seconds (2 digits 00-59)
     char buf[20];
-    snprintf(buf, 20, "%04d-%02d-%02d_%02d-%02d-%02d", aTm->tm_year + 1900, aTm->tm_mon + 1, aTm->tm_mday, aTm->tm_hour, aTm->tm_min, aTm->tm_sec);
+    snprintf(buf, 20, "%04d-%02d-%02d_%02d-%02d-%02d", aTm.tm_year + 1900, aTm.tm_mon + 1, aTm.tm_mday, aTm.tm_hour, aTm.tm_min, aTm.tm_sec);
     return std::string(buf);
 }
 
@@ -253,7 +332,9 @@ std::string TimeToTimestampStr(time_t t)
 bool IsIPAddress(char const* ipaddress)
 {
     if (!ipaddress)
-        { return false; }
+    {
+        return false;
+    }
 
     // Let the big boys do it.
     // Drawback: all valid ip address formats are recognized e.g.: 12.23,121234,0xABCD)
@@ -271,7 +352,9 @@ bool IsIPAddrInNetwork(ACE_INET_Addr const& net, ACE_INET_Addr const& addr, ACE_
 {
     uint32 mask = subnetMask.get_ip_address();
     if ((net.get_ip_address() & mask) == (addr.get_ip_address() & mask))
+    {
         return true;
+    }
     return false;
 }
 
@@ -280,7 +363,9 @@ uint32 CreatePIDFile(const std::string& filename)
 {
     FILE* pid_file = fopen(filename.c_str(), "w");
     if (pid_file == NULL)
-        { return 0; }
+    {
+        return 0;
+    }
 
 #ifdef WIN32
     DWORD pid = GetCurrentProcessId();
@@ -313,7 +398,9 @@ void utf8truncate(std::string& utf8str, size_t len)
     {
         size_t wlen = utf8::distance(utf8str.c_str(), utf8str.c_str() + utf8str.size());
         if (wlen <= len)
-            { return; }
+        {
+            return;
+        }
 
         std::wstring wstr;
         wstr.resize(wlen);
@@ -328,6 +415,33 @@ void utf8truncate(std::string& utf8str, size_t len)
     }
 }
 
+size_t utf8limit(std::string& utf8str, size_t bytes)
+{
+    if (utf8str.size() > bytes)
+    {
+        try
+        {
+            auto end = (utf8str.cbegin() + bytes);
+            auto itr = utf8::find_invalid(utf8str.cbegin(), end);
+
+            // Fix UTF8 if it was corrupted by bytes truncated
+            if (itr != end)
+                bytes = std::distance(utf8str.cbegin(), itr);
+
+            utf8str.resize(bytes);
+            utf8str.shrink_to_fit();
+
+            return bytes;
+        }
+        catch (const std::exception&)
+        {
+            utf8str = "";
+        }
+    }
+
+    return 0;
+}
+
 bool Utf8toWStr(char const* utf8str, size_t csize, wchar_t* wstr, size_t& wsize)
 {
     try
@@ -336,7 +450,9 @@ bool Utf8toWStr(char const* utf8str, size_t csize, wchar_t* wstr, size_t& wsize)
         if (len > wsize)
         {
             if (wsize > 0)
-                { wstr[0] = L'\0'; }
+            {
+                wstr[0] = L'\0';
+            }
             wsize = 0;
             return false;
         }
@@ -348,7 +464,9 @@ bool Utf8toWStr(char const* utf8str, size_t csize, wchar_t* wstr, size_t& wsize)
     catch (std::exception)
     {
         if (wsize > 0)
-            { wstr[0] = L'\0'; }
+        {
+            wstr[0] = L'\0';
+        }
         wsize = 0;
         return false;
     }
@@ -364,7 +482,9 @@ bool Utf8toWStr(const std::string& utf8str, std::wstring& wstr)
         wstr.resize(len);
 
         if (len)
-            { utf8::utf8to16(utf8str.c_str(), utf8str.c_str() + utf8str.size(), &wstr[0]); }
+        {
+            utf8::utf8to16(utf8str.c_str(), utf8str.c_str() + utf8str.size(), &wstr[0]);
+        }
     }
     catch (std::exception)
     {
@@ -422,7 +542,9 @@ bool utf8ToConsole(const std::string& utf8str, std::string& conStr)
 #if PLATFORM == PLATFORM_WINDOWS
     std::wstring wstr;
     if (!Utf8toWStr(utf8str, wstr))
-        { return false; }
+    {
+        return false;
+    }
 
     conStr.resize(wstr.size());
     CharToOemBuffW(&wstr[0], &conStr[0], wstr.size());
@@ -447,6 +569,7 @@ bool consoleToUtf8(const std::string& conStr, std::string& utf8str)
     utf8str = conStr;
     return true;
 #endif
+
 }
 
 bool Utf8FitTo(const std::string& str, std::wstring search)
@@ -454,13 +577,17 @@ bool Utf8FitTo(const std::string& str, std::wstring search)
     std::wstring temp;
 
     if (!Utf8toWStr(str, temp))
-        { return false; }
+    {
+        return false;
+    }
 
     // converting to lower case
     wstrToLower(temp);
 
     if (temp.find(search) == std::wstring::npos)
-        { return false; }
+    {
+        return false;
+    }
 
     return true;
 }
@@ -481,6 +608,7 @@ void vutf8printf(FILE* out, const char* str, va_list* ap)
 #else
     vfprintf(out, str, *ap);
 #endif
+
 }
 
 void hexEncodeByteArray(uint8* bytes, uint32 arrayLen, std::string& result)
@@ -493,9 +621,13 @@ void hexEncodeByteArray(uint8* bytes, uint32 arrayLen, std::string& result)
             unsigned char nibble = 0x0F & (bytes[i] >> ((1 - j) * 4));
             char encodedNibble;
             if (nibble < 0x0A)
-                { encodedNibble = '0' + nibble; }
+            {
+                encodedNibble = '0' + nibble;
+            }
             else
-                { encodedNibble = 'A' + nibble - 0x0A; }
+            {
+                encodedNibble = 'A' + nibble - 0x0A;
+            }
             ss << encodedNibble;
         }
     }
@@ -530,7 +662,9 @@ void HexStrToByteArray(std::string const& str, uint8* out, bool reverse /*= fals
 {
     // string must have even number of characters
     if (str.length() & 1)
+    {
         return;
+    }
 
     int32 init = 0;
     int32 end = str.length();
@@ -557,7 +691,9 @@ void utf8print(void* /*arg*/, const char* str)
     wchar_t wtemp_buf[6000];
     size_t wtemp_len = 6000 - 1;
     if (!Utf8toWStr(str, strlen(str), wtemp_buf, wtemp_len))
-        { return; }
+    {
+        return;
+    }
 
     char temp_buf[6000];
     CharToOemBuffW(&wtemp_buf[0], &temp_buf[0], wtemp_len + 1);
@@ -565,6 +701,7 @@ void utf8print(void* /*arg*/, const char* str)
 #else
     printf("%s", str);
 #endif
+
 }
 
 void utf8printf(FILE* out, const char* str, ...)
@@ -577,6 +714,7 @@ void utf8printf(FILE* out, const char* str, ...)
 
 int return_iCoreNumber()
 {
+
 #if defined(CLASSIC)
     return 0;
 #elif defined(TBC)
@@ -594,6 +732,7 @@ int return_iCoreNumber()
 #else
     return -1;
 #endif
+
 }
 
 /// Print out the core banner

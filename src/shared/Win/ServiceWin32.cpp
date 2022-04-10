@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,6 +41,7 @@
 #else
 #define WINADVAPI
 #endif
+
 #endif
 
 extern int main(int argc, char** argv);
@@ -167,7 +168,9 @@ bool WinServiceUninstall()
     if (QueryServiceStatus(service, &serviceStatus2))
     {
         if (serviceStatus2.dwCurrentState == SERVICE_STOPPED)
-            { DeleteService(service); }
+        {
+            DeleteService(service);
+        }
     }
 
     CloseServiceHandle(service);
@@ -205,10 +208,14 @@ void WINAPI ServiceControlHandler(DWORD controlCode)
         default:
             if (controlCode >= 128 && controlCode <= 255)
                 // user defined control code
-                { break; }
+            {
+                break;
+            }
             else
                 // unrecognized control code
-                { break; }
+            {
+                break;
+            }
     }
 
     SetServiceStatus(serviceStatusHandle, &serviceStatus);
@@ -236,7 +243,10 @@ void WINAPI ServiceMain(DWORD argc, char* argv[])
 
         for (i = 0; i < std::strlen(path); ++i)
         {
-            if (path[i] == '\\') { last_slash = i; }
+            if (path[i] == '\\')
+            {
+                last_slash = i;
+            }
         }
 
         path[last_slash] = 0;

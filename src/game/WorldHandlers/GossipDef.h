@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -139,6 +139,7 @@ struct GossipMenuItem
     uint32      m_gSender;
     uint32      m_gOptionId;
     std::string m_gBoxMessage;
+    uint32      m_gBoxMoney;
 };
 
 typedef std::vector<GossipMenuItem> GossipMenuItemList;
@@ -167,12 +168,12 @@ class GossipMenu
         ~GossipMenu();
 
         void AddMenuItem(uint8 Icon, const std::string& Message, bool Coded = false);
-        void AddMenuItem(uint8 Icon, const std::string& Message, uint32 dtSender, uint32 dtAction, const std::string& BoxMessage, bool Coded = false);
+        void AddMenuItem(uint8 Icon, const std::string& Message, uint32 dtSender, uint32 dtAction, const std::string& BoxMessage, uint32 BoxMoney = 0,  bool Coded = false);
 
         // for using from scripts, don't must be inlined
         void AddMenuItem(uint8 Icon, char const* Message, bool Coded = false);
-        void AddMenuItem(uint8 Icon, char const* Message, uint32 dtSender, uint32 dtAction, char const* BoxMessage, bool Coded = false);
-
+        void AddMenuItem(uint8 Icon, char const* Message, uint32 dtSender, uint32 dtAction, bool Coded = false);
+        void AddMenuItem(uint8 Icon, char const* Message, uint32 dtSender, uint32 dtAction, char const* BoxMessage, uint32 BoxMoney = 0, bool Coded =false);
         void AddMenuItem(uint8 Icon, int32 itemText, uint32 dtSender, uint32 dtAction, int32 boxText, bool Coded = false);
 
         void SetMenuId(uint32 menu_id) { m_gMenuId = menu_id; }

@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -66,11 +66,15 @@ class BIHWrap
              */
             bool operator()(const Ray& r, uint32 Idx, float& MaxDist, bool /*stopAtFirst*/)
             {
-                if (Idx >= objects_size) 
-                    { return false; }
+                if (Idx >= objects_size)
+                {
+                    return false;
+                }
 
                 if (const T* obj = objects[Idx])
-                    { return cb(r, *obj, MaxDist/*, stopAtFirst*/); }
+                {
+                    return cb(r, *obj, MaxDist/*, stopAtFirst*/);
+                }
                 return false;
             }
 
@@ -82,11 +86,15 @@ class BIHWrap
              */
             void operator()(const Vector3& p, uint32 Idx)
             {
-                if (Idx >= objects_size) 
-                    { return; }
+                if (Idx >= objects_size)
+                {
+                    return;
+                }
 
                 if (const T* obj = objects[Idx])
-                    { cb(p, *obj); }
+                {
+                    cb(p, *obj);
+                }
             }
         };
 
@@ -132,9 +140,13 @@ class BIHWrap
             uint32 Idx = 0;
             const T* temp;
             if (m_obj2Idx.getRemove(&obj, temp, Idx))
-                { m_objects[Idx] = NULL; }
+            {
+                m_objects[Idx] = NULL;
+            }
             else
-                { m_objects_to_push.remove(&obj); }
+            {
+                m_objects_to_push.remove(&obj);
+            }
         }
 
         /**
@@ -144,7 +156,9 @@ class BIHWrap
         void balance()
         {
             if (unbalanced_times == 0)
-                { return; }
+            {
+                return;
+            }
 
             unbalanced_times = 0;
             m_objects.fastClear();

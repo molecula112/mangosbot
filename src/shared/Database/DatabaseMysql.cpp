@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ DatabaseMysql::DatabaseMysql()
     // before first connection
     if (db_count++ == 0)
     {
-        //Mysql Library Init
+        // Mysql Library Init
         if(mysql_library_init(-1, NULL, NULL))
         {
             sLog.outError("Could not initialize MySQL client library\n");
@@ -69,9 +69,9 @@ DatabaseMysql::~DatabaseMysql()
 
     // Free Mysql library pointers for last ~DB
     if (--db_count == 0)
-        {
-            mysql_library_end();
-        }
+    {
+        mysql_library_end();
+    }
 }
 
 SqlConnection* DatabaseMysql::CreateConnection()
@@ -105,15 +105,25 @@ bool MySQLConnection::Initialize(const char* infoString)
     iter = tokens.begin();
 
     if (iter != tokens.end())
-        { host = *iter++; }
+    {
+        host = *iter++;
+    }
     if (iter != tokens.end())
-        { port_or_socket = *iter++; }
+    {
+        port_or_socket = *iter++;
+    }
     if (iter != tokens.end())
-        { user = *iter++; }
+    {
+        user = *iter++;
+    }
     if (iter != tokens.end())
-        { password = *iter++; }
+    {
+        password = *iter++;
+    }
     if (iter != tokens.end())
-        { database = *iter++; }
+    {
+        database = *iter++;
+    }
 
     mysql_options(mysqlInit, MYSQL_SET_CHARSET_NAME, "utf8");
     mysql_options(mysqlInit, MYSQL_OPT_RECONNECT, "1");
@@ -173,9 +183,13 @@ bool MySQLConnection::Initialize(const char* infoString)
     // LEAVE 'AUTOCOMMIT' MODE ALWAYS ENABLED!!!
     // W/O IT EVEN 'SELECT' QUERIES WOULD REQUIRE TO BE WRAPPED INTO 'START TRANSACTION'<>'COMMIT' CLAUSES!!!
     if (!mysql_autocommit(mMysql, 1))
-        { DETAIL_LOG("AUTOCOMMIT SUCCESSFULLY SET TO 1"); }
+    {
+        DETAIL_LOG("AUTOCOMMIT SUCCESSFULLY SET TO 1");
+    }
     else
-        { DETAIL_LOG("AUTOCOMMIT NOT SET TO 1"); }
+    {
+        DETAIL_LOG("AUTOCOMMIT NOT SET TO 1");
+    }
     /*-------------------------------------*/
 
     // set connection properties to UTF8 to properly handle locales for different
@@ -189,9 +203,11 @@ bool MySQLConnection::Initialize(const char* infoString)
 bool MySQLConnection::_Query(const char* sql, MYSQL_RES** pResult, MYSQL_FIELD** pFields, uint64* pRowCount, uint32* pFieldCount)
 {
     if (!mMysql)
-        { return 0; }
+    {
+        return 0;
+    }
 
-    uint32 _s = WorldTimer::getMSTime();
+    uint32 _s = getMSTime();
 
     if (mysql_query(mMysql, sql))
     {
@@ -201,7 +217,7 @@ bool MySQLConnection::_Query(const char* sql, MYSQL_RES** pResult, MYSQL_FIELD**
     }
     else
     {
-        DEBUG_FILTER_LOG(LOG_FILTER_SQL_TEXT, "[%u ms] SQL: %s", WorldTimer::getMSTimeDiff(_s, WorldTimer::getMSTime()), sql);
+        DEBUG_FILTER_LOG(LOG_FILTER_SQL_TEXT, "[%u ms] SQL: %s", getMSTimeDiff(_s, getMSTime()), sql);
     }
 
     *pResult = mysql_store_result(mMysql);
@@ -209,7 +225,9 @@ bool MySQLConnection::_Query(const char* sql, MYSQL_RES** pResult, MYSQL_FIELD**
     *pFieldCount = mysql_field_count(mMysql);
 
     if (!*pResult)
-        { return false; }
+    {
+        return false;
+    }
 
     if (!*pRowCount)
     {
@@ -229,7 +247,9 @@ QueryResult* MySQLConnection::Query(const char* sql)
     uint32 fieldCount = 0;
 
     if (!_Query(sql, &result, &fields, &rowCount, &fieldCount))
-        { return NULL; }
+    {
+        return NULL;
+    }
 
     QueryResultMysql* queryResult = new QueryResultMysql(result, fields, rowCount, fieldCount);
 
@@ -245,11 +265,15 @@ QueryNamedResult* MySQLConnection::QueryNamed(const char* sql)
     uint32 fieldCount = 0;
 
     if (!_Query(sql, &result, &fields, &rowCount, &fieldCount))
-        { return NULL; }
+    {
+        return NULL;
+    }
 
     QueryFieldNames names(fieldCount);
     for (uint32 i = 0; i < fieldCount; ++i)
-        { names[i] = fields[i].name; }
+    {
+        names[i] = fields[i].name;
+    }
 
     QueryResultMysql* queryResult = new QueryResultMysql(result, fields, rowCount, fieldCount);
 
@@ -260,10 +284,12 @@ QueryNamedResult* MySQLConnection::QueryNamed(const char* sql)
 bool MySQLConnection::Execute(const char* sql)
 {
     if (!mMysql)
-        { return false; }
+    {
+        return false;
+    }
 
     {
-        uint32 _s = WorldTimer::getMSTime();
+        uint32 _s = getMSTime();
 
         if (mysql_query(mMysql, sql))
         {
@@ -273,7 +299,7 @@ bool MySQLConnection::Execute(const char* sql)
         }
         else
         {
-            DEBUG_FILTER_LOG(LOG_FILTER_SQL_TEXT, "[%u ms] SQL: %s", WorldTimer::getMSTimeDiff(_s, WorldTimer::getMSTime()), sql);
+            DEBUG_FILTER_LOG(LOG_FILTER_SQL_TEXT, "[%u ms] SQL: %s", getMSTimeDiff(_s, getMSTime()), sql);
         }
         // end guarded block
     }
@@ -314,7 +340,9 @@ bool MySQLConnection::RollbackTransaction()
 unsigned long MySQLConnection::escape_string(char* to, const char* from, unsigned long length)
 {
     if (!mMysql || !to || !from || !length)
-        { return 0; }
+    {
+        return 0;
+    }
 
     return(mysql_real_escape_string(mMysql, to, from, length));
 }
@@ -339,7 +367,9 @@ MySqlPreparedStatement::~MySqlPreparedStatement()
 bool MySqlPreparedStatement::prepare()
 {
     if (isPrepared())
-        { return true; }
+    {
+        return true;
+    }
 
     // remove old binds
     RemoveBinds();
@@ -405,7 +435,9 @@ void MySqlPreparedStatement::bind(const SqlStmtParameters& holder)
 
     // finalize adding params
     if (!m_pInputArgs)
-        { return; }
+    {
+        return;
+    }
 
     // verify if we bound all needed input parameters
     if (m_nParams != holder.boundParams())
@@ -453,7 +485,9 @@ void MySqlPreparedStatement::addParam(unsigned int nIndex, const SqlStmtFieldDat
 void MySqlPreparedStatement::RemoveBinds()
 {
     if (!m_stmt)
-        { return; }
+    {
+        return;
+    }
 
     delete[] m_pInputArgs;
     delete[] m_pResult;
@@ -472,7 +506,9 @@ void MySqlPreparedStatement::RemoveBinds()
 bool MySqlPreparedStatement::execute()
 {
     if (!isPrepared())
-        { return false; }
+    {
+        return false;
+    }
 
     if (mysql_stmt_execute(m_stmt))
     {

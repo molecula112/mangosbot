@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,7 +41,9 @@ bool DBCFileLoader::Load(const char* filename, const char* fmt)
 
     FILE* f = fopen(filename, "rb");
     if (!f)
-        { return false; }
+    {
+        return false;
+    }
 
     if (fread(&header, 4, 1, f) != 1)                       // Number of records
     {
@@ -94,9 +96,13 @@ bool DBCFileLoader::Load(const char* filename, const char* fmt)
     {
         fieldsOffset[i] = fieldsOffset[i - 1];
         if (fmt[i - 1] == 'b' || fmt[i - 1] == 'X')         // byte fields
-            { fieldsOffset[i] += 1; }
+        {
+            fieldsOffset[i] += 1;
+        }
         else                                                // 4 byte fields (int32/float/strings)
-            { fieldsOffset[i] += 4; }
+        {
+            fieldsOffset[i] += 4;
+        }
     }
 
     data = new unsigned char[recordSize * recordCount + stringSize];
@@ -164,7 +170,9 @@ uint32 DBCFileLoader::GetFormatRecordSize(const char* format, int32* index_pos)
     }
 
     if (index_pos)
-        { *index_pos = i; }
+    {
+        *index_pos = i;
+    }
 
     return recordsize;
 }
@@ -184,7 +192,9 @@ char* DBCFileLoader::AutoProduceData(const char* format, uint32& records, char**
 
     typedef char* ptr;
     if (strlen(format) != fieldCount)
-        { return NULL; }
+    {
+        return NULL;
+    }
 
     // get struct size and index pos
     int32 i;
@@ -198,7 +208,9 @@ char* DBCFileLoader::AutoProduceData(const char* format, uint32& records, char**
         {
             uint32 ind = getRecord(y).getUInt(i);
             if (ind > maxi)
-                { maxi = ind; }
+            {
+                maxi = ind;
+            }
         }
 
         ++maxi;
@@ -223,7 +235,9 @@ char* DBCFileLoader::AutoProduceData(const char* format, uint32& records, char**
             indexTable[getRecord(y).getUInt(i)] = &dataTable[offset];
         }
         else
-            { indexTable[y] = &dataTable[offset]; }
+        {
+            indexTable[y] = &dataTable[offset];
+        }
 
         for (uint32 x = 0; x < fieldCount; ++x)
         {
@@ -266,7 +280,9 @@ char* DBCFileLoader::AutoProduceData(const char* format, uint32& records, char**
 char* DBCFileLoader::AutoProduceStrings(const char* format, char* dataTable)
 {
     if (strlen(format) != fieldCount)
-        { return NULL; }
+    {
+        return NULL;
+    }
 
     char* stringPool = new char[stringSize];
     memcpy(stringPool, stringTable, stringSize);

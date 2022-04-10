@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,9 @@ void ConfusedMovementGenerator<T>::Initialize(T& unit)
     unit.GetPosition(i_x, i_y, i_z);
 
     if (!unit.IsAlive() || unit.hasUnitState(UNIT_STAT_NOT_MOVE))
-        { return; }
+    {
+        return;
+    }
 
     unit.StopMoving();
     unit.addUnitState(UNIT_STAT_CONFUSED_MOVE);
@@ -57,7 +59,9 @@ void ConfusedMovementGenerator<T>::Reset(T& unit)
     i_nextMoveTime.Reset(0);
 
     if (!unit.IsAlive() || unit.hasUnitState(UNIT_STAT_NOT_MOVE))
-        { return; }
+    {
+        return;
+    }
 
     unit.StopMoving();
     unit.addUnitState(UNIT_STAT_CONFUSED | UNIT_STAT_CONFUSED_MOVE);
@@ -68,7 +72,9 @@ bool ConfusedMovementGenerator<T>::Update(T& unit, const uint32& diff)
 {
     // ignore in case other no reaction state
     if (unit.hasUnitState(UNIT_STAT_CAN_NOT_REACT & ~UNIT_STAT_CONFUSED))
-        { return true; }
+    {
+        return true;
+    }
 
     if (i_nextMoveTime.Passed())
     {
@@ -76,7 +82,9 @@ bool ConfusedMovementGenerator<T>::Update(T& unit, const uint32& diff)
         unit.addUnitState(UNIT_STAT_CONFUSED_MOVE);
 
         if (unit.movespline->Finalized())
-            { i_nextMoveTime.Reset(urand(800, 1500)); }
+        {
+            i_nextMoveTime.Reset(urand(800, 1500));
+        }
     }
     else
     {
@@ -101,7 +109,9 @@ bool ConfusedMovementGenerator<T>::Update(T& unit, const uint32& diff)
                 i_nextMoveTime.Reset(urand(800, 1000));             // Keep a short wait time
             }
             else
+            {
                 i_nextMoveTime.Reset(50);                           // Retry later
+            }
         }
     }
 

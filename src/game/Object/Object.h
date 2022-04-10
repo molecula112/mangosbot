@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,17 +31,18 @@
 #include "UpdateData.h"
 #include "ObjectGuid.h"
 #include "Camera.h"
+#include "GameTime.h"
 
 #include <set>
 
 #define CONTACT_DISTANCE            0.5f
 #define INTERACTION_DISTANCE        5.0f
 #define ATTACK_DISTANCE             5.0f
-#define TRADE_DISTANCE              11.11f                  // max distance for trading            
+#define TRADE_DISTANCE              11.11f                  // max distance for trading
 #define MAX_VISIBILITY_DISTANCE     333.0f                  // max distance for visible object show, limited in 333 yards
 #define DEFAULT_VISIBILITY_DISTANCE 90.0f                   // default visible distance, 90 yards on continents
 #define DEFAULT_VISIBILITY_INSTANCE 120.0f                  // default visible distance in instances, 120 yards
-#define DEFAULT_VISIBILITY_BG       180.0f                  // default visible distance in BG, 180 yards
+#define DEFAULT_VISIBILITY_BGARENAS 180.0f                  // default visible distance in BG/Arenas, 180 yards
 
 #define DEFAULT_WORLD_OBJECT_SIZE   0.388999998569489f      // currently used (correctly?) for any non Unit world objects. This is actually the bounding_radius, like player/creature from creature_model_data
 #define DEFAULT_OBJECT_SCALE        1.0f                    // non-Tauren player/item scale as default, npc/go from database, pets from dbc
@@ -50,18 +51,18 @@
 
 #define MAX_STEALTH_DETECT_RANGE    45.0f
 
-enum TempSummonType
+enum TempSpawnType
 {
-    TEMPSUMMON_MANUAL_DESPAWN              = 0,             // despawns when UnSummon() is called
-    TEMPSUMMON_DEAD_DESPAWN                = 1,             // despawns when the creature disappears
-    TEMPSUMMON_CORPSE_DESPAWN              = 2,             // despawns instantly after death
-    TEMPSUMMON_CORPSE_TIMED_DESPAWN        = 3,             // despawns after a specified time after death (or when the creature disappears)
-    TEMPSUMMON_TIMED_DESPAWN               = 4,             // despawns after a specified time
-    TEMPSUMMON_TIMED_OOC_DESPAWN           = 5,             // despawns after a specified time after the creature is out of combat
-    TEMPSUMMON_TIMED_OR_DEAD_DESPAWN       = 6,             // despawns after a specified time OR when the creature disappears
-    TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN     = 7,             // despawns after a specified time OR when the creature dies
-    TEMPSUMMON_TIMED_OOC_OR_DEAD_DESPAWN   = 8,             // despawns after a specified time (OOC) OR when the creature disappears
-    TEMPSUMMON_TIMED_OOC_OR_CORPSE_DESPAWN = 9,             // despawns after a specified time (OOC) OR when the creature dies
+    TEMPSPAWN_MANUAL_DESPAWN               = 0,             // despawns when UnSummon() is called
+    TEMPSPAWN_DEAD_DESPAWN                 = 1,             // despawns when the creature disappears
+    TEMPSPAWN_CORPSE_DESPAWN               = 2,             // despawns instantly after death
+    TEMPSPAWN_CORPSE_TIMED_DESPAWN         = 3,             // despawns after a specified time after death (or when the creature disappears)
+    TEMPSPAWN_TIMED_DESPAWN                = 4,             // despawns after a specified time
+    TEMPSPAWN_TIMED_OOC_DESPAWN            = 5,             // despawns after a specified time after the creature is out of combat
+    TEMPSPAWN_TIMED_OR_DEAD_DESPAWN        = 6,             // despawns after a specified time OR when the creature disappears
+    TEMPSPAWN_TIMED_OR_CORPSE_DESPAWN      = 7,             // despawns after a specified time OR when the creature dies
+    TEMPSPAWN_TIMED_OOC_OR_DEAD_DESPAWN    = 8,             // despawns after a specified time (OOC) OR when the creature disappears
+    TEMPSPAWN_TIMED_OOC_OR_CORPSE_DESPAWN  = 9,             // despawns after a specified time (OOC) OR when the creature dies
 };
 
 class WorldPacket;
@@ -113,12 +114,14 @@ class WorldUpdateCounter
         time_t timeElapsed()
         {
             if (!m_tmStart)
-                { m_tmStart = WorldTimer::tickPrevTime(); }
+            {
+                m_tmStart = GameTime::GetGameTimeMS();
+            }
 
-            return WorldTimer::getMSTimeDiff(m_tmStart, WorldTimer::tickTime());
+            return getMSTimeDiff(m_tmStart, GameTime::GetGameTimeMS());
         }
 
-        void Reset() { m_tmStart = WorldTimer::tickTime(); }
+        void Reset() { m_tmStart = GameTime::GetGameTimeMS(); }
 
     private:
         uint32 m_tmStart;
@@ -133,7 +136,9 @@ class Object
         virtual void AddToWorld()
         {
             if (m_inWorld)
-                { return; }
+            {
+                return;
+            }
 
             m_inWorld = true;
 
@@ -249,7 +254,7 @@ class Object
         void SetGuidValue(uint16 index, ObjectGuid const& value) { SetUInt64Value(index, value.GetRawValue()); }
         void SetStatFloatValue(uint16 index, float value);
         void SetStatInt32Value(uint16 index, int32 value);
-
+        void ForceValuesUpdateAtIndex(uint16 index);
         void ApplyModUInt32Value(uint16 index, int32 val, bool apply);
         void ApplyModInt32Value(uint16 index, int32 val, bool apply);
         void ApplyModPositiveFloatValue(uint16 index, float val, bool apply);
@@ -273,9 +278,13 @@ class Object
         void ToggleFlag(uint16 index, uint32 flag)
         {
             if (HasFlag(index, flag))
-                { RemoveFlag(index, flag); }
+            {
+                RemoveFlag(index, flag);
+            }
             else
-                { SetFlag(index, flag); }
+            {
+                SetFlag(index, flag);
+            }
         }
 
         /**
@@ -295,9 +304,13 @@ class Object
         void ApplyModFlag(uint16 index, uint32 flag, bool apply)
         {
             if (apply)
-                { SetFlag(index, flag); }
+            {
+                SetFlag(index, flag);
+            }
             else
-                { RemoveFlag(index, flag); }
+            {
+                RemoveFlag(index, flag);
+            }
         }
 
         void SetByteFlag(uint16 index, uint8 offset, uint8 newFlag);
@@ -306,9 +319,13 @@ class Object
         void ToggleByteFlag(uint16 index, uint8 offset, uint8 flag)
         {
             if (HasByteFlag(index, offset, flag))
-                { RemoveByteFlag(index, offset, flag); }
+            {
+                RemoveByteFlag(index, offset, flag);
+            }
             else
-                { SetByteFlag(index, offset, flag); }
+            {
+                SetByteFlag(index, offset, flag);
+            }
         }
 
         bool HasByteFlag(uint16 index, uint8 offset, uint8 flag) const
@@ -321,9 +338,13 @@ class Object
         void ApplyModByteFlag(uint16 index, uint8 offset, uint32 flag, bool apply)
         {
             if (apply)
-                { SetByteFlag(index, offset, flag); }
+            {
+                SetByteFlag(index, offset, flag);
+            }
             else
-                { RemoveByteFlag(index, offset, flag); }
+            {
+                RemoveByteFlag(index, offset, flag);
+            }
         }
 
         void SetShortFlag(uint16 index, bool highpart, uint16 newFlag);
@@ -332,9 +353,13 @@ class Object
         void ToggleShortFlag(uint16 index, bool highpart, uint8 flag)
         {
             if (HasShortFlag(index, highpart, flag))
-                { RemoveShortFlag(index, highpart, flag); }
+            {
+                RemoveShortFlag(index, highpart, flag);
+            }
             else
-                { SetShortFlag(index, highpart, flag); }
+            {
+                SetShortFlag(index, highpart, flag);
+            }
         }
 
         bool HasShortFlag(uint16 index, bool highpart, uint8 flag) const
@@ -346,9 +371,13 @@ class Object
         void ApplyModShortFlag(uint16 index, bool highpart, uint32 flag, bool apply)
         {
             if (apply)
-                { SetShortFlag(index, highpart, flag); }
+            {
+                SetShortFlag(index, highpart, flag);
+            }
             else
-                { RemoveShortFlag(index, highpart, flag); }
+            {
+                RemoveShortFlag(index, highpart, flag);
+            }
         }
 
         void SetFlag64(uint16 index, uint64 newFlag)
@@ -368,9 +397,13 @@ class Object
         void ToggleFlag64(uint16 index, uint64 flag)
         {
             if (HasFlag64(index, flag))
-                { RemoveFlag64(index, flag); }
+            {
+                RemoveFlag64(index, flag);
+            }
             else
-                { SetFlag64(index, flag); }
+            {
+                SetFlag64(index, flag);
+            }
         }
 
         bool HasFlag64(uint16 index, uint64 flag) const
@@ -382,9 +415,13 @@ class Object
         void ApplyModFlag64(uint16 index, uint64 flag, bool apply)
         {
             if (apply)
-                { SetFlag64(index, flag); }
+            {
+                SetFlag64(index, flag);
+            }
             else
-                { RemoveFlag64(index, flag); }
+            {
+                RemoveFlag64(index, flag);
+            }
         }
 
         void ClearUpdateMask(bool remove);
@@ -456,7 +493,7 @@ class WorldObject : public Object
 
         // class is used to manipulate with WorldUpdateCounter
         // it is needed in order to get time diff between two object's Update() calls
-        class  UpdateHelper
+        class UpdateHelper
         {
             public:
                 explicit UpdateHelper(WorldObject* obj) : m_obj(obj) {}
@@ -490,9 +527,13 @@ class WorldObject : public Object
         float GetPositionY() const { return m_position.y; }
         float GetPositionZ() const { return m_position.z; }
         void GetPosition(float& x, float& y, float& z) const
-        { x = m_position.x; y = m_position.y; z = m_position.z; }
+        {
+            x = m_position.x; y = m_position.y; z = m_position.z;
+        }
         void GetPosition(WorldLocation& loc) const
-        { loc.mapid = m_mapId; GetPosition(loc.coord_x, loc.coord_y, loc.coord_z); loc.orientation = GetOrientation(); }
+        {
+            loc.mapid = m_mapId; GetPosition(loc.coord_x, loc.coord_y, loc.coord_z); loc.orientation = GetOrientation();
+        }
         float GetOrientation() const { return m_position.o; }
 
         /// Gives a 2d-point in distance distance2d in direction absAngle around the current position (point-to-point)
@@ -631,7 +672,7 @@ class WorldObject : public Object
         void RemoveFromClientUpdateList() override;
         void BuildUpdateData(UpdateDataMapType&) override;
 
-        Creature* SummonCreature(uint32 id, float x, float y, float z, float ang, TempSummonType spwtype, uint32 despwtime, bool asActiveObject = false, bool setRun = false);
+        Creature* SummonCreature(uint32 id, float x, float y, float z, float ang, TempSpawnType spwtype, uint32 despwtime, bool asActiveObject = false, bool setRun = false);
         GameObject* SummonGameObject(uint32 id, float x, float y, float z, float angle, uint32 despwtime);
 
         bool IsActiveObject() const { return m_isActiveObject || m_viewPoint.hasViewers(); }
@@ -674,5 +715,56 @@ class WorldObject : public Object
         WorldUpdateCounter m_updateTracker;
         bool m_isActiveObject;
 };
+
+// Helper functions to cast between different Object pointers. Useful when unsure that your object* is valid at all.
+inline WorldObject* ToWorldObject(Object* object)
+{
+    return object && object->isType(TYPEMASK_WORLDOBJECT) ? static_cast<WorldObject*>(object) : nullptr;
+}
+
+inline WorldObject const* ToWorldObject(Object const* object)
+{
+    return object && object->isType(TYPEMASK_WORLDOBJECT) ? static_cast<WorldObject const*>(object) : nullptr;
+}
+
+inline GameObject* ToGameObject(Object* object)
+{
+    return object && object->GetTypeId() == TYPEID_GAMEOBJECT ? reinterpret_cast<GameObject*>(object) : nullptr;
+}
+
+inline GameObject const* ToGameObject(Object const* object)
+{
+    return object && object->GetTypeId() == TYPEID_GAMEOBJECT ? reinterpret_cast<GameObject const*>(object) : nullptr;
+}
+
+inline Unit* ToUnit(Object* object)
+{
+    return object && object->isType(TYPEMASK_UNIT) ? reinterpret_cast<Unit*>(object) : nullptr;
+}
+
+inline Unit const* ToUnit(Object const* object)
+{
+    return object && object->isType(TYPEMASK_UNIT) ? reinterpret_cast<Unit const*>(object) : nullptr;
+}
+
+inline Creature* ToCreature(Object* object)
+{
+    return object && object->GetTypeId() == TYPEID_UNIT ? reinterpret_cast<Creature*>(object) : nullptr;
+}
+
+inline Creature const* ToCreature(Object const* object)
+{
+    return object && object->GetTypeId() == TYPEID_UNIT ? reinterpret_cast<Creature const*>(object) : nullptr;
+}
+
+inline Player* ToPlayer(Object* object)
+{
+    return object && object->GetTypeId() == TYPEID_PLAYER ? reinterpret_cast<Player*>(object) : nullptr;
+}
+
+inline Player const* ToPlayer(Object const* object)
+{
+    return object && object->GetTypeId() == TYPEID_PLAYER ? reinterpret_cast<Player const*>(object) : nullptr;
+}
 
 #endif

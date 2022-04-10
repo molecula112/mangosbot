@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -85,9 +85,13 @@ namespace VMAP
         if (isMapLoadingEnabled())
         {
             if (_loadMap(pMapId, pBasePath, x, y))
-                { result = VMAP_LOAD_RESULT_OK; }
+            {
+                result = VMAP_LOAD_RESULT_OK;
+            }
             else
-                { result = VMAP_LOAD_RESULT_ERROR; }
+            {
+                result = VMAP_LOAD_RESULT_ERROR;
+            }
         }
         return result;
     }
@@ -103,7 +107,9 @@ namespace VMAP
             std::string mapFileName = getMapFileName(pMapId);
             StaticMapTree* newTree = new StaticMapTree(pMapId, basePath);
             if (!newTree->InitMap(mapFileName, this))
-                { return false; }
+            {
+                return false;
+            }
             instanceTree = iInstanceMapTrees.insert(InstanceTreeMap::value_type(pMapId, newTree)).first;
         }
         return instanceTree->second->LoadMapTile(tileX, tileY, this);
@@ -146,7 +152,9 @@ namespace VMAP
     bool VMapManager2::isInLineOfSight(unsigned int pMapId, float x1, float y1, float z1, float x2, float y2, float z2)
     {
         if (!isLineOfSightCalcEnabled() || IsVMAPDisabledForPtr(pMapId, VMAP_DISABLE_LOS))
+        {
             return true;
+        }
 
         bool result = true;
         InstanceTreeMap::iterator instanceTree = iInstanceMapTrees.find(pMapId);
@@ -247,9 +255,13 @@ namespace VMAP
                     floor = info.ground_Z;
                     type = info.hitModel->GetLiquidType();
                     if (ReqLiquidType && !(type & ReqLiquidType))
+                    {
                         return false;
+                    }
                     if (info.hitInstance->GetLiquidLevel(pos, info, level))
+                    {
                         return true;
+                    }
                 }
             }
         }

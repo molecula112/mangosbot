@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,7 +48,9 @@ void LoadGameObjectModelList()
 {
     FILE* model_list_file = fopen((sWorld.GetDataPath() + "vmaps/" + VMAP::GAMEOBJECT_MODELS).c_str(), "rb");
     if (!model_list_file)
-        { return; }
+    {
+        return;
+    }
 
     uint32 name_length, displayId;
     char buff[500];
@@ -97,14 +99,18 @@ void LoadGameObjectModelList()
 GameObjectModel::~GameObjectModel()
 {
     if (iModel)
-        { ((VMAP::VMapManager2*)VMAP::VMapFactory::createOrGetVMapManager())->releaseModelInstance(iName); }
+    {
+        ((VMAP::VMapManager2*)VMAP::VMapFactory::createOrGetVMapManager())->releaseModelInstance(iName);
+    }
 }
 
 bool GameObjectModel::initialize(const GameObject* const pGo, const GameObjectDisplayInfoEntry* const pDisplayInfo)
 {
     ModelList::const_iterator it = model_list.find(pDisplayInfo->Displayid);
     if (it == model_list.end())
-        { return false; }
+    {
+        return false;
+    }
 
     iModelBound = it->second.bound;
     // ignore models with no bounds
@@ -117,7 +123,9 @@ bool GameObjectModel::initialize(const GameObject* const pGo, const GameObjectDi
     iModel = ((VMAP::VMapManager2*)VMAP::VMapFactory::createOrGetVMapManager())->acquireModelInstance(sWorld.GetDataPath() + "vmaps/", it->second.name);
 
     if (!iModel)
-        { return false; }
+    {
+        return false;
+    }
 
     iOwner = pGo;
     iName = it->second.name;
@@ -144,7 +152,9 @@ void GameObjectModel::UpdateRotation(G3D::Quat const& q)
     G3D::AABox rotated_bounds;
 
     for (int i = 0; i < 8; ++i)
-        { rotated_bounds.merge((iQuat * G3D::Quat(mdl_box.corner(i)) * iQuat.conj()).imag()); }
+    {
+        rotated_bounds.merge((iQuat * G3D::Quat(mdl_box.corner(i)) * iQuat.conj()).imag());
+    }
 
     iBound = rotated_bounds + iPos;
 }
@@ -153,7 +163,9 @@ GameObjectModel* GameObjectModel::Create(const GameObject* const pGo)
 {
     const GameObjectDisplayInfoEntry* info = sGameObjectDisplayInfoStore.LookupEntry(pGo->GetDisplayId());
     if (!info)
-        { return NULL; }
+    {
+        return NULL;
+    }
 
     GameObjectModel* mdl = new GameObjectModel();
     if (!mdl->initialize(pGo, info))
@@ -168,11 +180,15 @@ GameObjectModel* GameObjectModel::Create(const GameObject* const pGo)
 bool GameObjectModel::IntersectRay(const G3D::Ray& ray, float& MaxDist, bool StopAtFirstHit) const
 {
     if (!isCollidable)
-        { return false; }
+    {
+        return false;
+    }
 
     float time = ray.intersectionTime(iBound);
     if (time == G3D::inf())
-        { return false; }
+    {
+        return false;
+    }
 
     // child bounds are defined in object space:
     Vector3 p = (iQuat.conj() * G3D::Quat((ray.origin() - iPos) * iInvScale) * iQuat).imag();
@@ -191,9 +207,13 @@ bool GameObjectModel::GetIntersectPoint(const G3D::Vector3& srcPoint, G3D::Vecto
 {
     G3D::Vector3 p;
     if (absolute)
+    {
         p = (iQuat.conj() * G3D::Quat((srcPoint - iPos) * iInvScale) * iQuat).imag();
+    }
     else
+    {
         p = srcPoint;
+    }
 
     float dist;
     bool hit = iModel->GetContactPoint(p, G3D::Vector3(0.0f, 0.0f, -1.0f), dist);

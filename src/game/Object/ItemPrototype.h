@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -319,7 +319,6 @@ enum ItemSubclassPermanent
 enum ItemSubclassJunk
 {
     ITEM_SUBCLASS_JUNK                          = 0
-
 };
 
 #define MAX_ITEM_SUBCLASS_JUNK                    1
@@ -486,13 +485,29 @@ struct ItemPrototype
         return false;
     }
 
-    uint32 GetMaxStackSize() const { return Stackable; }
+    uint32 GetMaxStackSize() const
+    {
+        return Stackable;
+    }
 
-    bool IsPotion() const { return Class == ITEM_CLASS_CONSUMABLE && SubClass == ITEM_SUBCLASS_POTION; }
-    bool IsConjuredConsumable() const { return Class == ITEM_CLASS_CONSUMABLE && (Flags & ITEM_FLAG_CONJURED); }
+    bool IsPotion() const
+    {
+        return Class == ITEM_CLASS_CONSUMABLE && SubClass == ITEM_SUBCLASS_POTION;
+    }
 
-    bool IsWeaponVellum() const { return Class == ITEM_CLASS_TRADE_GOODS; }
-    bool IsArmorVellum() const { return Class == ITEM_CLASS_TRADE_GOODS; }
+    bool IsConjuredConsumable() const
+    {
+        return Class == ITEM_CLASS_CONSUMABLE && (Flags & ITEM_FLAG_CONJURED);
+    }
+
+    bool IsWeaponVellum() const
+    {
+        return Class == ITEM_CLASS_TRADE_GOODS;
+    }
+    bool IsArmorVellum() const
+    {
+        return Class == ITEM_CLASS_TRADE_GOODS;
+    }
 };
 
 // GCC have alternative #pragma pack() syntax and old gcc version not support pack(pop), also any gcc version not support it at some platform

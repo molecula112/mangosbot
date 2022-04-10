@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -82,7 +82,7 @@ enum SpellAuraInterruptFlags
     AURA_INTERRUPT_FLAG_NOT_SHEATHED                = 0x00000200,   // 9    removed by unsheathing
     AURA_INTERRUPT_FLAG_UNK10                       = 0x00000400,   // 10
     AURA_INTERRUPT_FLAG_UNK11                       = 0x00000800,   // 11
-    AURA_INTERRUPT_FLAG_MELEE_ATTACK                = 0x00001000,   // 12   removed by melee attack
+    AURA_INTERRUPT_FLAG_MELEE_ATTACK                = 0x00001000,   // 12   removed by melee attacks
     AURA_INTERRUPT_FLAG_UNK13                       = 0x00002000,   // 13
     AURA_INTERRUPT_FLAG_UNK14                       = 0x00004000,   // 14
     AURA_INTERRUPT_FLAG_UNK15                       = 0x00008000,   // 15   removed by casting a spell?
@@ -125,7 +125,7 @@ enum SpellModOp
     SPELLMOD_HASTE                  = 23,
     SPELLMOD_SPELL_BONUS_DAMAGE     = 24,
     // spellmod 25 unused
-    // SPELLMOD_FREQUENCY_OF_SUCCESS   = 26,                
+    // SPELLMOD_FREQUENCY_OF_SUCCESS   = 26,
     SPELLMOD_MULTIPLE_VALUE         = 27,
     SPELLMOD_RESIST_DISPEL_CHANCE   = 28
 };
@@ -163,7 +163,7 @@ enum UnitStandStateType
     UNIT_STAND_STATE_SIT_MEDIUM_CHAIR  = 5,
     UNIT_STAND_STATE_SIT_HIGH_CHAIR    = 6,
     UNIT_STAND_STATE_DEAD              = 7,
-    UNIT_STAND_STATE_KNEEL             = 8
+    UNIT_STAND_STATE_KNEEL             = 8,
 };
 
 #define MAX_UNIT_STAND_STATE             9
@@ -326,7 +326,7 @@ enum AuraRemoveMode
     AURA_REMOVE_BY_STACK,           ///< at replace by similar aura
     AURA_REMOVE_BY_CANCEL,          ///< It was cancelled by the user (needs confirmation)
     AURA_REMOVE_BY_DISPEL,          ///< It was dispelled by ie Remove Magic
-    AURA_REMOVE_BY_DEATH,           ///< The \ref Unit died and there for it was removed 
+    AURA_REMOVE_BY_DEATH,           ///< The \ref Unit died and there for it was removed
     AURA_REMOVE_BY_DELETE,          ///< use for speedup and prevent unexpected effects at player logout/pet unsummon (must be used _only_ after save), delete.
     AURA_REMOVE_BY_SHIELD_BREAK,    ///< when absorb shield is removed by damage
     AURA_REMOVE_BY_EXPIRE,          ///< at duration end
@@ -485,7 +485,7 @@ extern float baseMoveSpeed[MAX_MOVE_TYPE];
 /// internal used flags for marking special auras - for example some dummy-auras
 enum UnitAuraFlags
 {
-    UNIT_AURAFLAG_ALIVE_INVISIBLE   = 0x1                   // aura which makes unit invisible for alive
+    UNIT_AURAFLAG_ALIVE_INVISIBLE   = 0x1,                  // aura which makes unit invisible for alive
 };
 
 enum UnitVisibility
@@ -508,7 +508,7 @@ enum UnitFlags
     UNIT_FLAG_NONE                  = 0x00000000,
     UNIT_FLAG_UNK_0                 = 0x00000001,
     UNIT_FLAG_NON_ATTACKABLE        = 0x00000002,           ///< not attackable
-    UNIT_FLAG_DISABLE_MOVE          = 0x00000004,
+    UNIT_FLAG_CLIENT_CONTROL_LOST   = 0x00000004,           // Generic unspecified loss of control initiated by server script, movement checks disabled, paired with loss of client control packet.
     UNIT_FLAG_PVP_ATTACKABLE        = 0x00000008,           ///< allow apply pvp rules to attackable state in addition to faction dependent state, UNIT_FLAG_UNKNOWN1 in pre-bc mangos
     UNIT_FLAG_RENAME                = 0x00000010,           ///< rename creature
     UNIT_FLAG_RESTING               = 0x00000020,
@@ -529,7 +529,6 @@ enum UnitFlags
     UNIT_FLAG_SHEATHE               = 0x40000000,
     // UNIT_FLAG_UNK_31              = 0x80000000           // no affect in 1.12.1
 
-    // [-ZERO] TBC enumerations [?]
     UNIT_FLAG_NOT_ATTACKABLE_1      = 0x00000080,           ///< ?? (UNIT_FLAG_PVP_ATTACKABLE | UNIT_FLAG_NOT_ATTACKABLE_1) is NON_PVP_ATTACKABLE
     UNIT_FLAG_LOOTING               = 0x00000400,           ///< loot animation
     UNIT_FLAG_PET_IN_COMBAT         = 0x00000800,           ///< in combat?, 2.0.8
@@ -538,8 +537,7 @@ enum UnitFlags
     UNIT_FLAG_DISARMED              = 0x00200000,           ///< disable melee spells casting..., "Required melee weapon" added to melee spells tooltip.
     UNIT_FLAG_CONFUSED              = 0x00400000,
     UNIT_FLAG_FLEEING               = 0x00800000,
-    UNIT_FLAG_PLAYER_CONTROLLED     = 0x01000000,           ///< used in spell Eyes of the Beast for pet... let attack by controlled creature
-    // [-ZERO] UNIT_FLAG_MOUNT                 = 0x08000000,
+    UNIT_FLAG_POSSESSED             = 0x01000000,           ///< used in spell Eyes of the Beast for pet... let attack by controlled creature |// Unit is under remote control by another unit, movement checks disabled, paired with loss of client control packet. New master is allowed to use melee attack and can't select this unit via mouse in the world (as if it was own character).
     UNIT_FLAG_UNK_28                = 0x10000000,
     UNIT_FLAG_UNK_29                = 0x20000000            ///< used in Feign Death spell
 };
@@ -999,7 +997,7 @@ enum ActionBarIndex
 /**
  * This structure/class is used when someone is charming (ie: mind control spell and the like)
  * someone else, to get the charmed ones action bar, the spells and such. It also takes care
- * of pets the charmed one has etc. 
+ * of pets the charmed one has etc.
  */
 struct CharmInfo
 {
@@ -1065,8 +1063,6 @@ enum ReactiveType
 {
     REACTIVE_DEFENSE      = 1,
     REACTIVE_HUNTER_PARRY = 2,
-    // REACTIVE_CRIT         = 3,
-    // REACTIVE_HUNTER_CRIT  = 4,
     REACTIVE_OVERPOWER    = 5
 };
 
@@ -1238,7 +1234,9 @@ class Unit : public WorldObject
         bool CanUseEquippedWeapon(WeaponAttackType attackType) const
         {
             if (IsInFeralForm())
-                { return false; }
+            {
+                return false;
+            }
 
             switch (attackType)
             {
@@ -1290,7 +1288,9 @@ class Unit : public WorldObject
         {
             AttackerSet::const_iterator itr = m_attackers.find(pAttacker);
             if (itr == m_attackers.end())
-                { m_attackers.insert(pAttacker); }
+            {
+                m_attackers.insert(pAttacker);
+            }
         }
         /**
          * Internal function, must only be called from Unit::AttackStop()
@@ -1308,10 +1308,14 @@ class Unit : public WorldObject
         Unit* getAttackerForHelper()                        // If someone wants to help, who to give them
         {
             if (getVictim() != NULL)
-                { return getVictim(); }
+            {
+                return getVictim();
+            }
 
             if (!m_attackers.empty())
-                { return *(m_attackers.begin()); }
+            {
+                return *(m_attackers.begin());
+            }
 
             return NULL;
         }
@@ -1407,6 +1411,32 @@ class Unit : public WorldObject
          * \see Cell::VisitAllObjects
          */
         Unit* SelectRandomFriendlyTarget(Unit* except = NULL, float radius = ATTACK_DISTANCE) const;
+        /**
+        * @param fRange how big the radius for our search should be
+        * @param uiMinHPDiff how much health the unit has to be missing
+        * @param bPercent if the previous param is percent or raw value
+        * @param except select any target but this one, usually your current target
+        * @return The injured friendly target found, NULL if no targets were found
+        * \see Mangos::UnitListSearcher
+        * \see Cell::VisitAllObjects
+        */
+        Unit* FindLowestHpFriendlyUnit(float fRange, uint32 uiMinHPDiff = 1, bool bPercent = false, Unit* except = nullptr) const;
+        /**
+        * @param range how big the radius for our search should be
+        * @param spellid buff to check
+        * @param except select any target but this one, usually your current target
+        * @return The friendly target found, NULL if no targets were found
+        * \see Mangos::UnitListSearcher
+        * \see Cell::VisitAllObjects
+        */
+        Unit* FindFriendlyUnitMissingBuff(float range, uint32 spellid, Unit* except = nullptr) const;
+        /**
+        * @param range how big the radius for our search should be
+        * @return The friendly target found, NULL if no targets were found
+        * \see Mangos::UnitListSearcher
+        * \see Cell::VisitAllObjects
+        */
+        Unit* FindFriendlyUnitCC(float range) const;
         /**
          * Checks if we have a negative aura with the given interrupt flag/s
          * @param flag The interrupt flag/s to check for, see SpellAuraInterruptFlags
@@ -1561,7 +1591,7 @@ class Unit : public WorldObject
          * \see EUnitFields
          * \see GetUInt32Value
          */
-        bool HealthAbovePctHealed(int32 pct, uint32 heal) const { return uint64(GetHealth()) + uint64(heal) > CountPctFromMaxHealth(pct); }          
+        bool HealthAbovePctHealed(int32 pct, uint32 heal) const { return uint64(GetHealth()) + uint64(heal) > CountPctFromMaxHealth(pct); }
         uint32 GetMaxHealth() const { return GetUInt32Value(UNIT_FIELD_MAXHEALTH); }
         bool IsFullHealth() const { return GetHealth() == GetMaxHealth(); }
         bool HealthBelowPct(int32 pct) const { return GetHealth() < CountPctFromMaxHealth(pct); }
@@ -1575,7 +1605,7 @@ class Unit : public WorldObject
          */
         float GetHealthPercent() const { return (GetHealth() * 100.0f) / GetMaxHealth(); }
         uint32 CountPctFromMaxHealth(int32 pct) const { return (GetMaxHealth() * static_cast<float>(pct) / 100.0f); }
-        uint32 CountPctFromCurHealth(int32 pct) const { return (GetHealth() * static_cast<float>(pct) / 100.0f); }  
+        uint32 CountPctFromCurHealth(int32 pct) const { return (GetHealth() * static_cast<float>(pct) / 100.0f); }
         /**
          * Sets the health to the given value, it cant be higher than Unit::GetMaxHealth though
          * @param val the value to set the health to
@@ -1733,7 +1763,9 @@ class Unit : public WorldObject
         bool IsContestedGuard() const
         {
             if (FactionTemplateEntry const* entry = getFactionTemplateEntry())
-                { return entry->IsContestedGuardFaction(); }
+            {
+                return entry->IsContestedGuardFaction();
+            }
 
             return false;
         }
@@ -1767,6 +1799,29 @@ class Unit : public WorldObject
             return (creatureType >= 1) ? (1 << (creatureType - 1)) : 0;
         }
 
+        bool isVendor()       const { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_VENDOR); }
+        bool isTrainer()      const { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_TRAINER); }
+        bool isQuestGiver()   const { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER); }
+        bool isGossip()       const { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP); }
+        bool isTaxi()         const { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_FLIGHTMASTER); }
+        bool isGuildMaster()  const { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_PETITIONER); }
+        bool isBattleMaster() const { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_BATTLEMASTER); }
+        bool isBanker()       const { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_BANKER); }
+        bool isInnkeeper()    const { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_INNKEEPER); }
+        bool isSpiritHealer() const { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_SPIRITHEALER); }
+        bool isSpiritGuide()  const { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_SPIRITGUIDE); }
+        bool isTabardDesigner()const { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_TABARDDESIGNER); }
+        bool isArmorer()      const { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_REPAIR); }
+        bool isServiceProvider() const
+        {
+            return HasFlag(UNIT_NPC_FLAGS,
+                UNIT_NPC_FLAG_VENDOR | UNIT_NPC_FLAG_TRAINER | UNIT_NPC_FLAG_FLIGHTMASTER |
+                UNIT_NPC_FLAG_PETITIONER | UNIT_NPC_FLAG_BATTLEMASTER | UNIT_NPC_FLAG_BANKER |
+                UNIT_NPC_FLAG_INNKEEPER | UNIT_NPC_FLAG_SPIRITHEALER |
+                UNIT_NPC_FLAG_SPIRITGUIDE | UNIT_NPC_FLAG_TABARDDESIGNER | UNIT_NPC_FLAG_AUCTIONEER);
+        }
+        bool isSpiritService() const { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_SPIRITHEALER | UNIT_NPC_FLAG_SPIRITGUIDE); }
+
         /**
          * Gets the current stand state for this Unit as described by UnitStandStateType.
          * @return The current stand state
@@ -1786,7 +1841,7 @@ class Unit : public WorldObject
          * @return true if the Unit is standing normally, false otherwise
          */
         bool IsStandState() const;
-        
+
         bool IsSeatedState() const;
         /**
          * Change the stand state for this Unit. For possible values check
@@ -2342,10 +2397,10 @@ class Unit : public WorldObject
          * @param destinationPositionX is the in game ordinate that we wish to check against the creature's current X ordinate (are they the same, or very close?)
          * @param destinationPositionY is the in game ordinate that we wish to check against the creature's current Y ordinate (are they the same, or very close?)
          * @param destinationPositionZ is the in game ordinate that we wish to check against the creature's current Z ordinate (are they the same, or very close?)
-         * @param distanceX is the distance from the creature's current X ordinate to the destination X ordinate 
-         * @param distanceY is the distance from the creature's current Y ordinate to the destination Y ordinate 
-         * @param distanceZ is the distance from the creature's current Z ordinate to the destination Z ordinate 
-         * 
+         * @param distanceX is the distance from the creature's current X ordinate to the destination X ordinate
+         * @param distanceY is the distance from the creature's current Y ordinate to the destination Y ordinate
+         * @param distanceZ is the distance from the creature's current Z ordinate to the destination Z ordinate
+         *
          */
         bool IsNearWaypoint(float currentPositionX, float currentPositionY, float currentPositionZ, float destinationPositionX, float destinationPositionY, float destinationPositionZ, float distanceX, float distanceY, float distanceZ);
 
@@ -2888,16 +2943,16 @@ class Unit : public WorldObject
          * \see MovementInfo::HasMovementFlag
          */
         bool IsRooted() const { return m_movementInfo.HasMovementFlag(MOVEFLAG_ROOT); }
-        /**
-         * Roots or unroots this \ref Unit depending on the enabled parameter.
-         * @param enabled whether we should root (true) or unroot (false) this \ref Unit
-         * \see Player::SetRoot
-         */
         virtual void SetLevitate(bool /*enabled*/) {}
         virtual void SetSwim(bool /*enabled*/) {}
         virtual void SetCanFly(bool /*enabled*/) {}
         virtual void SetFeatherFall(bool /*enabled*/) {}
         virtual void SetHover(bool /*enabled*/) {}
+        /**
+         * Roots or unroots this \ref Unit depending on the enabled parameter.
+         * @param enabled whether we should root (true) or unroot (false) this \ref Unit
+         * \see Player::SetRoot
+         */
         virtual void SetRoot(bool /*enabled*/) {}
         /**
          * Changes this \ref Unit s ability to walk on water.
@@ -2978,12 +3033,12 @@ class Unit : public WorldObject
          */
         virtual Pet* GetMiniPet() const { return NULL; }    // overwrited in Player
 
-        /** 
+        /**
          * Gets either the current charmer (ie mind control) or the owner of this \ref Unit
          * @return the \ref ObjectGuid of either the charmer of this \ref Unit or the owner of it
          */
         ObjectGuid const& GetCharmerOrOwnerGuid() const { return GetCharmerGuid() ? GetCharmerGuid() : GetOwnerGuid(); }
-        /** 
+        /**
          * Same thing as \ref Unit::GetCharmerOrOwnerGuid but with the exception that it returns
          * it's own \ref ObjectGuid if it has no owner or charmer.
          * @return either the charmers, owners or it's own \ref ObjectGuid
@@ -2991,17 +3046,19 @@ class Unit : public WorldObject
         ObjectGuid const& GetCharmerOrOwnerOrOwnGuid() const
         {
             if (ObjectGuid const& guid = GetCharmerOrOwnerGuid())
-                { return guid; }
+            {
+                return guid;
+            }
             return GetObjectGuid();
         }
-        /** 
+        /**
          * Checks if the charmer or owner is a \ref Player
          * @return true if the charmer or owner is a \ref Player, false otherwise
          * \see ObjectGuid::IsPlayer
          */
         bool IsCharmedOwnedByPlayerOrPlayer() const { return GetCharmerOrOwnerOrOwnGuid().IsPlayer(); }
 
-        /** 
+        /**
          * Get's the \ref Player that owns the \ref SpellModifier for this \ref Unit, if this
          * \ref Unit is a \ref Player it's the owner, but if it's a \ref Pet och \ref Totem then
          * then owner of the totem is returned if it's a \ref Player
@@ -3009,29 +3066,29 @@ class Unit : public WorldObject
          */
         Player* GetSpellModOwner() const;
 
-        /** 
+        /**
          * Returns the \ref Unit that owns this \ref Unit if any
          * @return the \ref Unit that owns this one, NULL if there is no owner
          * \see Unit::GetOwnerGuid
          */
         Unit* GetOwner() const;
-        /** 
+        /**
          * Returns the \ref Pet for this \ref Unit if any
          * @return the \ref Pet that is associated with this \ref Unit if any, NULL if there is none
          * \see Unit::GetPetGuid
          */
         Pet* GetPet() const;
-        /** 
+        /**
          * Returns the \ref Unit that's currently charming this one if any.
          * @return the \ref Unit that's charming this one, NULL if there is none
          */
         Unit* GetCharmer() const;
-        /** 
+        /**
          * Returns the \ref Unit that this one is currently charming
          * @return the \ref Unit that this one is charming, NULL if there is none
          */
         Unit* GetCharm() const;
-        /** 
+        /**
          * Removes all \ref Aura s causing this \ref Unit to be charmed/possessed, the \ref Aura s
          * that cause this are:
          * - \ref AuraType::SPELL_AURA_MOD_CHARM
@@ -3039,19 +3096,21 @@ class Unit : public WorldObject
          * - \ref AuraType::SPELL_AURA_MOD_POSSESS_PET
          */
         void Uncharm();
-        /** 
+        /**
          * Does the same as \ref Unit::GetCharmerOrOwnerGuid but returns the \ref Unit for that instead
          * @return the \ref Unit that's charming this one or owning it, NULL if there is none
          */
         Unit* GetCharmerOrOwner() const { return GetCharmerGuid() ? GetCharmer() : GetOwner(); }
-        /** 
+        /**
          * Does the same a \ref Unit::GetCharmerOrOwner but if there is none of those it returns itself
          * @return a \ref Unit that's either owning or charming this one or just itself.
          */
         Unit* GetCharmerOrOwnerOrSelf()
         {
             if (Unit* u = GetCharmerOrOwner())
-                { return u; }
+            {
+                return u;
+            }
 
             return this;
         }
@@ -3059,35 +3118,35 @@ class Unit : public WorldObject
         Player* GetCharmerOrOwnerPlayerOrPlayerItself();
         Player const* GetCharmerOrOwnerPlayerOrPlayerItself() const;
 
-        /** 
+        /**
          * Set's the current \ref Pet for this \ref Unit
          * @param pet The \ref Pet to add to this \ref Unit
          */
         void SetPet(Pet* pet);
-        /** 
+        /**
          * Set's who we're currently charming
          * @param pet The \ref Unit to set as charmed by us
          */
         void SetCharm(Unit* pet);
 
-        /** 
+        /**
          * Adds a guardian to this \ref Unit which will generally defend this \ref Unit when on a
          * threat list.
          * @param pet the guardian to add
          * \see Unit::m_guardianPets
          */
         void AddGuardian(Pet* pet);
-        /** 
+        /**
          * Removes a guardian from this \ref Unit
          * @param pet the guardian to remove
          * \see Unit::m_guardianPets
          */
         void RemoveGuardian(Pet* pet);
-        /** 
+        /**
          * Removes all current guardians from this \ref Unit
          */
         void RemoveGuardians();
-        /** 
+        /**
          * Finds a guardian by it's entry, this is the entry in character.character_pet
          * @param entry the entry to find
          * @return the guardian/\ref Pet found or NULL if there's no such entry in the db
@@ -3095,19 +3154,19 @@ class Unit : public WorldObject
          */
         Pet* FindGuardianWithEntry(uint32 entry);
 
-        /** 
+        /**
          * Is this \ref Unit charmed?
          * @return true if the \ref Unit has a charmer, false otherwise
          * \see Unit::GetCharmerGuid
          */
         bool IsCharmed() const { return !GetCharmerGuid().IsEmpty(); }
 
-        /** 
+        /**
          * There's only \ref CharmInfo available if this \ref Unit is in fact charmed by someone
          * @return The \ref CharmInfo for this \ref Unit if any, NULL otherwise
          */
         CharmInfo* GetCharmInfo() { return m_charmInfo; }
-        /** 
+        /**
          * Init the \ref CharmInfo struct with data about the \ref Unit that will be charmed
          * @param charm the \ref Unit that is to be charmed
          * @return the created \ref CharmInfo
@@ -3115,38 +3174,38 @@ class Unit : public WorldObject
          */
         CharmInfo* InitCharmInfo(Unit* charm);
 
-        /** 
+        /**
          * Get's the \ref ObjectGuid for a certain totem type that this \ref Unit has spawned
          * @param slot the slot to get the \ref ObjectGuid for
          * @return the \ref ObjectGuid for the given totem slot
          */
         ObjectGuid const& GetTotemGuid(TotemSlot slot) const { return m_TotemSlot[slot]; }
-        /** 
+        /**
          * Gets a certain \ref Totem that this \ref Unit has spawned
          * @param slot the slot to get the \ref Totem for
          * @return The requested totem if there is any spawned, NULL otherwise
          */
         Totem* GetTotem(TotemSlot slot) const;
-        /** 
+        /**
          * @return True if all totems slots are used (spawned), false otherwise
          */
         bool IsAllTotemSlotsUsed() const;
 
-        /** 
+        /**
          * This is internal code that should only be called from the \ref Totem summon code
-         * @param slot 
+         * @param slot
          * @param totem
          * \internal
          */
         void _AddTotem(TotemSlot slot, Totem* totem);       // only for call from Totem summon code
-        /** 
+        /**
          * This is internal code that should only be called from the \ref Totem class.
          * @param totem
          * \internal
          */
         void _RemoveTotem(Totem* totem);                    // only for call from Totem class
 
-        /** 
+        /**
          * This will call the given function for all controlled \ref Unit s, for an example of
          * how one such function could look please have a look at \ref CallForAllControlledUnitsExample
          *
@@ -3161,7 +3220,7 @@ class Unit : public WorldObject
          */
         template<typename Func>
         void CallForAllControlledUnits(Func const& func, uint32 controlledMask);
-        /** 
+        /**
          * Works pretty much the same way as \ref Unit::CallForAllControlledUnits but instead
          * the functors operator() should have the following signature:
          * \code{.cpp}
@@ -3178,29 +3237,29 @@ class Unit : public WorldObject
         template<typename Func>
         bool CheckAllControlledUnits(Func const& func, uint32 controlledMask) const;
 
-        /** 
+        /**
          * Adds a \ref SpellAuraHolder
          * @param holder the holder to add
          * @return true if the holder was added, false otherwise
          */
         bool AddSpellAuraHolder(SpellAuraHolder* holder);
-        /** 
+        /**
          * Adds a \ref Aura to \ref Unit::m_modAuras
          * @param aura the \ref Aura to add
          */
         void AddAuraToModList(Aura* aura);
-        
-        
-        /** 
+
+
+        /**
          * Removes an \ref Aura and sets the reason for removal inside the \ref Aura.
-         * 
+         *
          * removing specific aura stack (From old comment)
          * @param aura the \ref Aura to remove
          * @param mode the reason why it is being removed
          * \see Aura::SetRemoveMode
          */
         void RemoveAura(Aura* aura, AuraRemoveMode mode = AURA_REMOVE_BY_DEFAULT);
-        /** 
+        /**
          * Removes an \ref Aura by spell id and the effect index for that spell to find out
          * which \ref Aura to remove.
          * @param spellId id of the spell which has the sought \ref Aura somewhere
@@ -3208,14 +3267,14 @@ class Unit : public WorldObject
          * @param except if != NULL we will not remove this \ref Aura if found
          */
         void RemoveAura(uint32 spellId, SpellEffectIndex effindex, Aura* except = NULL);
-        /** 
+        /**
          * Removes a \ref SpellAuraHolder from this \ref Unit. This will remove all the effects that
          * are currently stored in the \ref SpellAuraHolder.
          * @param holder holder to be removed
          * @param mode reason for removal
          */
         void RemoveSpellAuraHolder(SpellAuraHolder* holder, AuraRemoveMode mode = AURA_REMOVE_BY_DEFAULT);
-        /** 
+        /**
          * Removes a single \ref Aura from a \ref SpellAuraHolder to cancel out just one effect of a
          * \ref Spell.
          * @param holder the holder to remove the \ref Aura from
@@ -3223,7 +3282,7 @@ class Unit : public WorldObject
          * @param mode the reason for removing it
          */
         void RemoveSingleAuraFromSpellAuraHolder(SpellAuraHolder* holder, SpellEffectIndex index, AuraRemoveMode mode = AURA_REMOVE_BY_DEFAULT);
-        /** 
+        /**
          * Does the same thing as \ref Unit::RemoveSingleAuraFromSpellAuraHolder but with spell id
          * instead of a \ref SpellAuraHolder
          * @param id id of the spell to find the \ref Aura in
@@ -3233,10 +3292,10 @@ class Unit : public WorldObject
          */
         void RemoveSingleAuraFromSpellAuraHolder(uint32 id, SpellEffectIndex index, ObjectGuid casterGuid, AuraRemoveMode mode = AURA_REMOVE_BY_DEFAULT);
 
-        /** 
+        /**
          * Removes all \ref Aura s that a certain spell would cause via it's effects (up to 3 of them
          * per \ref Aura).
-         * 
+         *
          * From old doc: removing specific aura stacka by diff reasons and selections
          * @param spellId id of the spell causing the \ref Aura s you would like to remove
          * @param except a spell that shouldn't be included in the removal
@@ -3244,26 +3303,26 @@ class Unit : public WorldObject
          * \see SpellEntry::Effect
          */
         void RemoveAurasDueToSpell(uint32 spellId, SpellAuraHolder* except = NULL, AuraRemoveMode mode = AURA_REMOVE_BY_DEFAULT);
-        /** 
+        /**
          * Removes all \ref Aura s that a certain spell cast by a certain \ref Item would cause via
          * it's effects (up to 3 of them per \ref Aura).
          * @param castItem the \ref Item that cast the spell
          * @param spellId id of the spell causing the \ref Aura s you would like to remove
          */
         void RemoveAurasDueToItemSpell(Item* castItem, uint32 spellId);
-        /** 
+        /**
          * Removes all \ref Aura s applied by spells casted by a certain \ref Player / \ref Unit
          * @param casterGuid \ref ObjectGuid of the caster
          */
         void RemoveAurasByCaster(ObjectGuid casterGuid);
-        /** 
+        /**
          * Removes all \ref Aura s that a certain spell cast by a certain \ref Player / \ref Unit
          * would cause via it's effects (up to 3 of them per \ref Aura)
          * @param spellId id of the \ref Spell causing the \ref Aura s you would like to remove
          * @param casterGuid \ref ObjectGuid of the caster
          */
         void RemoveAurasByCasterSpell(uint32 spellId, ObjectGuid casterGuid);
-        /** 
+        /**
          * Removes all \ref Aura s caused by a certain spell because it was canceled.
          * @param spellId id of the \ref Spell causing the \ref Aura s you would like to remove
          */
@@ -3275,7 +3334,7 @@ class Unit : public WorldObject
          * \todo Document and find out what it does
          */
         void RemoveNotOwnTrackedTargetAuras();
-        /** 
+        /**
          * Removes all \ref SpellAuraHolder s that have the given \ref Mechanics mask which is created
          * by doing something like the following if we want a mask for \ref Mechanics::MECHANIC_SAPPED:
          * \code{.cpp}
@@ -3287,73 +3346,73 @@ class Unit : public WorldObject
          * @param non_positive if we should remove non positive \ref Aura s or not, defaults to false
          */
         void RemoveAurasAtMechanicImmunity(uint32 mechMask, uint32 exceptSpellId, bool non_positive = false);
-        /** 
+        /**
          * Removes all \ref Spell s that cause the given \ref AuraType
          * @param auraType the type of auras we would like to remove spells for
          */
         void RemoveSpellsCausingAura(AuraType auraType);
-        /** 
+        /**
          * Same as \ref Unit::RemoveSpellsCausingAura but with an exception
          * for a \ref SpellAuraHolder that shouldn't be removed
          * @param auraType the type of auras we would like to remove spells for
          * @param except this will be excepted from removal
          */
         void RemoveSpellsCausingAura(AuraType auraType, SpellAuraHolder* except);
-        /** 
+        /**
          * Same as \ref Unit::RemoveSpellsCausingAura but for a matching caster aswell.
          * @param auraType the type of auras we would like to remove spells for
          * @param casterGuid remove the aura only if the caster is equal to this guid
          */
         void RemoveSpellsCausingAura(AuraType auraType, ObjectGuid casterGuid);
-        /** 
+        /**
          * Removes all ranks of the given \ref Spell, ie: if the spellid of rank 1 inner fire is
          * given all the ranks of it will be removed.
          * @param spellId id of the spell we want to remove all ranks for
          */
         void RemoveRankAurasDueToSpell(uint32 spellId);
-        /** 
-         * 
-         * @param holder 
+        /**
+         *
+         * @param holder
          * @return true if we could remove something (and did), false otherwise
          * \todo Document what this does and break into smaller functions!
          */
         bool RemoveNoStackAurasDueToAuraHolder(SpellAuraHolder* holder);
-        /** 
+        /**
          * Removes all \ref Aura s that have the given interrupt flags
          * @param flags see \ref AuraInterruptFlags for possible flags
          */
         void RemoveAurasWithInterruptFlags(uint32 flags);
-        /** 
+        /**
          * Removes all \ref Aura s that have the given attributes
          * @param flags see \ref SpellAttributes for possible values
          */
         void RemoveAurasWithAttribute(uint32 flags);
-        /** 
+        /**
          * Removes all \ref Aura s which can be dispelled by the given \ref DispelType
          * @param type the given type that you want to remove all \ref Aura s for
          * @param casterGuid if this isn't 0 it will be checked that the caster of the \ref Spell is
          * the same as the given guid before removal.
          */
         void RemoveAurasWithDispelType(DispelType type, ObjectGuid casterGuid = ObjectGuid());
-        /** 
+        /**
          * Removes all \ref Aura s.
          * @param mode the reason for removal
          */
         void RemoveAllAuras(AuraRemoveMode mode = AURA_REMOVE_BY_DEFAULT);
-        /** 
+        /**
          * Removes all \ref Aura s on this \ref Unit s death. Removes all visible \ref Aura s and
          * disabled the mods for the passive ones (taken from old docs). The reason used is
          * \ref AuraRemoveMode::AURA_REMOVE_BY_DEATH
          * \todo Where does it remove the passive ones?
          */
         void RemoveAllAurasOnDeath();
-        /** 
+        /**
          * used when evading to remove all auras except some special auras. Linked and flying
          * \ref Aura s shouldn't be removed on evade.
          * \todo Are linked and flying auras really not removed on evade?
          */
         void RemoveAllAurasOnEvade();
-        
+
         // removing specific aura FROM stack by diff reasons and selections
         void RemoveAuraHolderFromStack(uint32 spellId, uint32 stackAmount = 1, ObjectGuid casterGuid = ObjectGuid(), AuraRemoveMode mode = AURA_REMOVE_BY_DEFAULT);
         void RemoveAuraHolderDueToSpellByDispel(uint32 spellId, uint32 stackAmount, ObjectGuid casterGuid, Unit* dispeller);
@@ -3373,10 +3432,12 @@ class Unit : public WorldObject
         void InterruptSpell(CurrentSpellTypes spellType, bool withDelayed = true);
         void FinishSpell(CurrentSpellTypes spellType, bool ok = true);
 
+        bool IsClientControlled(Player const* exactClient = nullptr) const;
+
         // set withDelayed to true to account delayed spells as casted
         // delayed+channeled spells are always accounted as casted
         // we can skip channeled or delayed checks using flags
-        bool IsNonMeleeSpellCasted(bool withDelayed, bool skipChanneled = false, bool skipAutorepeat = false) const;
+        bool IsNonMeleeSpellCasted(bool withDelayed, bool skipChanneled = false, bool skipAutorepeat = false, bool forMovement = false, bool forAutoIgnore = false) const;
 
         // set withDelayed to true to interrupt delayed spells too
         // delayed+channeled spells are always interrupted
@@ -3406,7 +3467,7 @@ class Unit : public WorldObject
         {
             ShapeshiftForm form = GetShapeshiftForm();
             return form != FORM_NONE && form != FORM_BATTLESTANCE && form != FORM_BERSERKERSTANCE && form != FORM_DEFENSIVESTANCE &&
-                   form != FORM_SHADOW && form != FORM_STEALTH; 
+                   form != FORM_SHADOW && form != FORM_STEALTH;
         }
 
         float m_modMeleeHitChance;
@@ -3442,6 +3503,10 @@ class Unit : public WorldObject
         float GetTotalAttackPowerValue(WeaponAttackType attType) const;
         float GetWeaponDamageRange(WeaponAttackType attType , WeaponDamageRange type) const;
         void SetBaseWeaponDamage(WeaponAttackType attType , WeaponDamageRange damageRange, float value) { m_weaponDamage[attType][damageRange] = value; }
+
+        SpellSchools GetWeaponDamageSchool(WeaponAttackType attType, uint8 index = 0) const { return m_weaponDamageInfo.weapon[attType].damage[index].school; }
+        void SetWeaponDamageSchool(WeaponAttackType attType, SpellSchools school, uint8 index = 0) { m_weaponDamageInfo.weapon[attType].damage[index].school = school; }
+
 
         // Visibility system
         UnitVisibility GetVisibility() const { return m_Visibility; }
@@ -3633,7 +3698,7 @@ class Unit : public WorldObject
         ///----------Various crowd control methods-----------------
         bool IsImmobilized() const { return hasUnitState(UNIT_STAT_ROOT | UNIT_STAT_STUNNED); }
         void SetImmobilizedState(bool apply, bool stun = false);
-        
+
         // These getters operate on unit flags set by IncapacitatedState and are meant for formal usage in conjunction with spell effects only
         // For actual internal movement states use UnitState flags
         // TODO: The UnitState thing needs to be rewriten at some point, this kind of duality is bad
@@ -3641,7 +3706,7 @@ class Unit : public WorldObject
         bool IsConfused() const { return HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_CONFUSED); }
         bool IsStunned() const { return HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_STUNNED); }
         bool IsIncapacitated() const { return (IsFleeing() || IsConfused() || IsStunned()); }
-        
+
         void SetFeared(bool apply, ObjectGuid casterGuid = ObjectGuid(), uint32 spellID = 0, uint32 time = 0);
         void SetConfused(bool apply, ObjectGuid casterGuid = ObjectGuid(), uint32 spellID = 0);
         void SetStunned(bool apply);
@@ -3690,7 +3755,24 @@ class Unit : public WorldObject
         virtual bool CanSwim() const = 0;
         virtual bool CanFly() const = 0;
 
-    protected:
+protected:
+        struct WeaponDamageInfo
+        {
+            struct Weapon
+            {
+                struct Damage
+                {
+                    SpellSchools school = SPELL_SCHOOL_NORMAL;
+                    float value[2] = { BASE_MINDAMAGE, BASE_MAXDAMAGE };
+                };
+
+                uint32 lines = 1;
+                Damage damage[MAX_ITEM_PROTO_DAMAGES];
+            };
+
+            Weapon weapon[MAX_ATTACK];
+        };
+
         explicit Unit();
 
         void _UpdateSpells(uint32 time);
@@ -3726,6 +3808,8 @@ class Unit : public WorldObject
         AuraList m_modAuras[TOTAL_AURAS];
         float m_auraModifiersGroup[UNIT_MOD_END][MODIFIER_TYPE_END];
         float m_weaponDamage[MAX_ATTACK][2];
+        WeaponDamageInfo m_weaponDamageInfo;
+
         bool m_canModifyStats;
         // std::list< spellEffectPair > AuraSpells[TOTAL_AURAS];  // TODO: use this if ok for mem
 
@@ -3746,7 +3830,8 @@ class Unit : public WorldObject
         bool m_isSpawningLinked;
 
     private:
-        void CleanupDeletedAuras();
+
+    void CleanupDeletedAuras();
         void UpdateSplineMovement(uint32 t_diff);
 
         Unit* _GetTotem(TotemSlot slot) const;              // for templated function without include need
@@ -3765,7 +3850,7 @@ class Unit : public WorldObject
         UnitVisibility m_Visibility;
         Position m_last_notified_position;
         bool m_AINotifyScheduled;
-        ShortTimeTracker m_movesplineTimer;
+        TimeTracker m_movesplineTimer;
 
         Diminishing m_Diminishing;
         // Manage all Units threatening us
@@ -3805,29 +3890,39 @@ void Unit::CallForAllControlledUnits(Func const& func, uint32 controlledMask)
 {
     if (controlledMask & CONTROLLED_PET)
         if (Pet* pet = GetPet())
-            { func(pet); }
+        {
+            func(pet);
+        }
 
     if (controlledMask & CONTROLLED_MINIPET)
         if (Pet* mini = GetMiniPet())
-            { func(mini); }
+        {
+            func(mini);
+        }
 
     if (controlledMask & CONTROLLED_GUARDIANS)
     {
         for (GuidSet::const_iterator itr = m_guardianPets.begin(); itr != m_guardianPets.end();)
             if (Pet* guardian = _GetPet(*(itr++)))
-                { func(guardian); }
+            {
+                func(guardian);
+            }
     }
 
     if (controlledMask & CONTROLLED_TOTEMS)
     {
         for (int i = 0; i < MAX_TOTEM_SLOT; ++i)
             if (Unit* totem = _GetTotem(TotemSlot(i)))
-                { func(totem); }
+            {
+                func(totem);
+            }
     }
 
     if (controlledMask & CONTROLLED_CHARM)
         if (Unit* charm = GetCharm())
-            { func(charm); }
+        {
+            func(charm);
+        }
 }
 
 
@@ -3837,19 +3932,25 @@ bool Unit::CheckAllControlledUnits(Func const& func, uint32 controlledMask) cons
     if (controlledMask & CONTROLLED_PET)
         if (Pet const* pet = GetPet())
             if (func(pet))
-                { return true; }
+            {
+                return true;
+            }
 
     if (controlledMask & CONTROLLED_MINIPET)
         if (Pet* mini = GetMiniPet())
             if (func(mini))
-                { return true; }
+            {
+                return true;
+            }
 
     if (controlledMask & CONTROLLED_GUARDIANS)
     {
         for (GuidSet::const_iterator itr = m_guardianPets.begin(); itr != m_guardianPets.end();)
             if (Pet const* guardian = _GetPet(*(itr++)))
                 if (func(guardian))
-                    { return true; }
+                {
+                    return true;
+                }
     }
 
     if (controlledMask & CONTROLLED_TOTEMS)
@@ -3857,13 +3958,17 @@ bool Unit::CheckAllControlledUnits(Func const& func, uint32 controlledMask) cons
         for (int i = 0; i < MAX_TOTEM_SLOT; ++i)
             if (Unit const* totem = _GetTotem(TotemSlot(i)))
                 if (func(totem))
-                    { return true; }
+                {
+                    return true;
+                }
     }
 
     if (controlledMask & CONTROLLED_CHARM)
         if (Unit const* charm = GetCharm())
             if (func(charm))
-                { return true; }
+            {
+                return true;
+            }
 
     return false;
 }

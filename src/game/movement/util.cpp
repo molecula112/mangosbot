@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,22 +40,32 @@ namespace Movement
     float computeFallTime(float path_length, bool isSafeFall)
     {
         if (path_length < 0.f)
-            { return 0.f; }
+        {
+            return 0.f;
+        }
 
         float time;
         if (isSafeFall)
         {
             if (path_length >= terminal_savefall_length)
-                { time = (path_length - terminal_savefall_length) / terminalSavefallVelocity + terminalSavefallVelocity / gravity; }
+            {
+                time = (path_length - terminal_savefall_length) / terminalSavefallVelocity + terminalSavefallVelocity / gravity;
+            }
             else
-                { time = sqrtf(2.f * path_length / gravity); }
+            {
+                time = sqrtf(2.f * path_length / gravity);
+            }
         }
         else
         {
             if (path_length >= terminal_length)
-                { time = (path_length - terminal_length) / terminalVelocity + terminalFallTime; }
+            {
+                time = (path_length - terminal_length) / terminalVelocity + terminalFallTime;
+            }
             else
-                { time = sqrtf(2.f * path_length / gravity); }
+            {
+                time = sqrtf(2.f * path_length / gravity);
+            }
         }
 
         return time;
@@ -67,12 +77,18 @@ namespace Movement
         float result;
 
         if (isSafeFall)
-            { termVel = terminalSavefallVelocity; }
+        {
+            termVel = terminalSavefallVelocity;
+        }
         else
-            { termVel = terminalVelocity; }
+        {
+            termVel = terminalVelocity;
+        }
 
         if (start_velocity > termVel)
-            { start_velocity = termVel; }
+        {
+            start_velocity = termVel;
+        }
 
         float terminal_time = terminalFallTime - start_velocity / gravity; // the time that needed to reach terminalVelocity
 
@@ -82,7 +98,9 @@ namespace Movement
                      start_velocity * terminal_time + gravity * terminal_time * terminal_time * 0.5f;
         }
         else
-            { result = t_passed * (start_velocity + t_passed * gravity * 0.5f); }
+        {
+            result = t_passed * (start_velocity + t_passed * gravity * 0.5f);
+        }
 
         return result;
     }
@@ -98,7 +116,9 @@ namespace Movement
             result = terminalVelocity * (t_passed - terminalFallTime) + terminal_length;
         }
         else
-            { result = t_passed * t_passed * gravity * 0.5f; }
+        {
+            result = t_passed * t_passed * gravity * 0.5f;
+        }
 
         return result;
     }
@@ -200,7 +220,9 @@ namespace Movement
         for (int i = 0; i < N; ++i)
         {
             if ((t & (Flags)(1 << i)) && names[i] != NULL)
-                { str.append(" ").append(names[i]); }
+            {
+                str.append(" ").append(names[i]);
+            }
         }
     }
 

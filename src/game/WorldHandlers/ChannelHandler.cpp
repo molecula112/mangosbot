@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,9 @@ void WorldSession::HandleJoinChannelOpcode(WorldPacket& recvPacket)
     recvPacket >> channelName;
 
     if (channelName.empty())
-        { return; }
+    {
+        return;
+    }
 
     recvPacket >> pass;
 
@@ -94,7 +96,9 @@ void WorldSession::HandleJoinChannelOpcode(WorldPacket& recvPacket)
     if (ChannelMgr* cMgr = channelMgr(_player->GetTeam()))
         //the channel id needs to be checkd for lfg (explanation?)
         if (Channel* chn = cMgr->GetJoinChannel(channelName))
+        {
             chn->Join(_player, pass.c_str());
+        }
 }
 
 void WorldSession::HandleLeaveChannelOpcode(WorldPacket& recvPacket)
@@ -107,12 +111,16 @@ void WorldSession::HandleLeaveChannelOpcode(WorldPacket& recvPacket)
     recvPacket >> channelname;
 
     if (channelname.empty())
-        { return; }
+    {
+        return;
+    }
 
     if (ChannelMgr* cMgr = channelMgr(_player->GetTeam()))
     {
         if (Channel* chn = cMgr->GetChannel(channelname, _player))
+        {
             chn->Leave(_player, true);
+        }
         cMgr->LeftChannel(channelname);
     }
 }
@@ -126,7 +134,9 @@ void WorldSession::HandleChannelListOpcode(WorldPacket& recvPacket)
 
     if (ChannelMgr* cMgr = channelMgr(_player->GetTeam()))
         if (Channel* chn = cMgr->GetChannel(channelname, _player))
-            { chn->List(_player); }
+        {
+            chn->List(_player);
+        }
 }
 
 void WorldSession::HandleChannelPasswordOpcode(WorldPacket& recvPacket)
@@ -156,7 +166,9 @@ void WorldSession::HandleChannelSetOwnerOpcode(WorldPacket& recvPacket)
     recvPacket >> newp;
 
     if (!normalizePlayerName(newp))
-        { return; }
+    {
+        return;
+    }
 
     if (ChannelMgr* cMgr = channelMgr(_player->GetTeam()))
         if (Channel* chn = cMgr->GetChannel(channelname, _player))
@@ -188,7 +200,9 @@ void WorldSession::HandleChannelModeratorOpcode(WorldPacket& recvPacket)
     recvPacket >> otp;
 
     if (!normalizePlayerName(otp))
-        { return; }
+    {
+        return;
+    }
 
     if (ChannelMgr* cMgr = channelMgr(_player->GetTeam()))
         if (Channel* chn = cMgr->GetChannel(channelname, _player))
@@ -207,7 +221,9 @@ void WorldSession::HandleChannelUnmoderatorOpcode(WorldPacket& recvPacket)
     recvPacket >> otp;
 
     if (!normalizePlayerName(otp))
-        { return; }
+    {
+        return;
+    }
 
     if (ChannelMgr* cMgr = channelMgr(_player->GetTeam()))
         if (Channel* chn = cMgr->GetChannel(channelname, _player))
@@ -226,7 +242,9 @@ void WorldSession::HandleChannelMuteOpcode(WorldPacket& recvPacket)
     recvPacket >> otp;
 
     if (!normalizePlayerName(otp))
-        { return; }
+    {
+        return;
+    }
 
     if (ChannelMgr* cMgr = channelMgr(_player->GetTeam()))
         if (Channel* chn = cMgr->GetChannel(channelname, _player))
@@ -246,7 +264,9 @@ void WorldSession::HandleChannelUnmuteOpcode(WorldPacket& recvPacket)
     recvPacket >> otp;
 
     if (!normalizePlayerName(otp))
-        { return; }
+    {
+        return;
+    }
 
     if (ChannelMgr* cMgr = channelMgr(_player->GetTeam()))
         if (Channel* chn = cMgr->GetChannel(channelname, _player))
@@ -265,7 +285,9 @@ void WorldSession::HandleChannelInviteOpcode(WorldPacket& recvPacket)
     recvPacket >> otp;
 
     if (!normalizePlayerName(otp))
-        { return; }
+    {
+        return;
+    }
 
     if (ChannelMgr* cMgr = channelMgr(_player->GetTeam()))
         if (Channel* chn = cMgr->GetChannel(channelname, _player))
@@ -326,7 +348,9 @@ void WorldSession::HandleChannelUnbanOpcode(WorldPacket& recvPacket)
     recvPacket >> otp;
 
     if (!normalizePlayerName(otp))
-        { return; }
+    {
+        return;
+    }
 
     if (ChannelMgr* cMgr = channelMgr(_player->GetTeam()))
         if (Channel* chn = cMgr->GetChannel(channelname, _player))
@@ -369,7 +393,9 @@ void WorldSession::HandleChannelDisplayListQueryOpcode(WorldPacket& recvPacket)
     recvPacket >> channelname;
     if (ChannelMgr* cMgr = channelMgr(_player->GetTeam()))
         if (Channel* chn = cMgr->GetChannel(channelname, _player))
-            { chn->List(_player); }
+        {
+            chn->List(_player);
+        }
 }
 
 void WorldSession::HandleGetChannelMemberCountOpcode(WorldPacket& recvPacket)
@@ -399,5 +425,8 @@ void WorldSession::HandleSetChannelWatchOpcode(WorldPacket& recvPacket)
     recvPacket >> channelname;
     /*if(ChannelMgr* cMgr = channelMgr(_player->GetTeam()))
         if(Channel *chn = cMgr->GetChannel(channelname, _player))
-            chn->JoinNotify(_player->GetGUID());*/
+        {
+            chn->JoinNotify(_player->GetGUID());
+        }
+    */
 }

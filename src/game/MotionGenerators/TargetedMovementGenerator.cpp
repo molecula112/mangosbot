@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,10 +36,14 @@ template<class T, typename D>
 void TargetedMovementGeneratorMedium<T, D>::_setTargetLocation(T& owner, bool updateDestination)
 {
     if (!i_target.isValid() || !i_target->IsInWorld())
-        { return; }
+    {
+        return;
+    }
 
     if (owner.hasUnitState(UNIT_STAT_NOT_MOVE))
-        { return; }
+    {
+        return;
+    }
 
     float x, y, z;
 
@@ -53,7 +57,9 @@ void TargetedMovementGeneratorMedium<T, D>::_setTargetLocation(T& owner, bool up
         if (!RequiresNewPosition(owner, x, y, z))
         {
             if (!owner.movespline->Finalized())
-                { return; }
+            {
+                return;
+            }
         }
         // Chase Movement and angle == 0 case: Chase to current angle
         else if (this->GetMovementGeneratorType() == CHASE_MOTION_TYPE && i_angle == 0.0f)
@@ -76,14 +82,18 @@ void TargetedMovementGeneratorMedium<T, D>::_setTargetLocation(T& owner, bool up
     }
 
     if (!i_path)
-        { i_path = new PathFinder(&owner); }
+    {
+        i_path = new PathFinder(&owner);
+    }
 
     // allow pets following their master to cheat while generating paths
     bool forceDest = (owner.GetTypeId() == TYPEID_UNIT && ((Creature*)&owner)->IsPet()
                       && owner.hasUnitState(UNIT_STAT_FOLLOW));
     i_path->calculate(x, y, z, forceDest);
     if (i_path->getPathType() & PATHFIND_NOPATH)
-        { return; }
+    {
+        return;
+    }
 
     D::_addUnitStateMove(owner);
     i_targetReached = false;
@@ -99,10 +109,14 @@ template<class T, typename D>
 bool TargetedMovementGeneratorMedium<T, D>::Update(T& owner, const uint32& time_diff)
 {
     if (!i_target.isValid() || !i_target->IsInWorld())
-        { return false; }
+    {
+        return false;
+    }
 
     if (!owner.IsAlive())
-        { return true; }
+    {
+        return true;
+    }
 
     if (owner.hasUnitState(UNIT_STAT_NOT_MOVE))
     {
@@ -117,10 +131,19 @@ bool TargetedMovementGeneratorMedium<T, D>::Update(T& owner, const uint32& time_
     }
 
     // prevent movement while casting spells with cast time or channel time
-    if (owner.IsNonMeleeSpellCasted(false, false,  true))
+    if (owner.IsNonMeleeSpellCasted(false, false, true, true))
     {
-        if (!owner.IsStopped())
-            { owner.StopMoving(); }
+        if (!owner.movespline->Finalized())
+        {
+            if (owner.IsClientControlled())
+            {
+                owner.StopMoving(true);
+            }
+            else
+            {
+                owner.InterruptMoving();
+            }
+        }
         return true;
     }
 
@@ -158,7 +181,9 @@ bool TargetedMovementGeneratorMedium<T, D>::Update(T& owner, const uint32& time_
     }
 
     if (m_speedChanged || targetMoved)
-        { _setTargetLocation(owner, targetMoved); }
+    {
+        _setTargetLocation(owner, targetMoved);
+    }
 
     if (owner.movespline->Finalized())
     {
@@ -182,9 +207,13 @@ bool TargetedMovementGeneratorMedium<T, D>::RequiresNewPosition(T& owner, float 
 {
     // More distance let have better performance, less distance let have more sensitive reaction at target move.
     if (owner.GetTypeId() == TYPEID_UNIT && ((Creature*)&owner)->CanFly())
-        { return !i_target->IsWithinDist3d(x, y, z, this->GetDynamicTargetDistance(owner, true)); }
+    {
+        return !i_target->IsWithinDist3d(x, y, z, this->GetDynamicTargetDistance(owner, true));
+    }
     else
-        { return !i_target->IsWithinDist2d(x, y, this->GetDynamicTargetDistance(owner, true)); }
+    {
+        return !i_target->IsWithinDist2d(x, y, this->GetDynamicTargetDistance(owner, true));
+    }
 }
 
 //-----------------------------------------------//
@@ -203,7 +232,9 @@ template<class T>
 void ChaseMovementGenerator<T>::_reachTarget(T& owner)
 {
     if (owner.CanReachWithMeleeAttack(this->i_target.getTarget()))
-        { owner.Attack(this->i_target.getTarget(), true); }
+    {
+        owner.Attack(this->i_target.getTarget(), true);
+    }
 }
 
 template<>
@@ -250,7 +281,9 @@ template<class T>
 float ChaseMovementGenerator<T>::GetDynamicTargetDistance(T& owner, bool forRangeCheck) const
 {
     if (!forRangeCheck)
-        { return this->i_offset + CHASE_DEFAULT_RANGE_FACTOR * this->i_target->GetCombatReach(&owner); }
+    {
+        return this->i_offset + CHASE_DEFAULT_RANGE_FACTOR * this->i_target->GetCombatReach(&owner);
+    }
 
     return CHASE_RECHASE_RANGE_FACTOR * this->i_target->GetCombatReach(&owner) - this->i_target->GetObjectBoundingRadius();
 }
@@ -284,7 +317,9 @@ void FollowMovementGenerator<Creature>::_updateSpeed(Creature& u)
 {
     // pet only sync speed with owner
     if (!((Creature&)u).IsPet() || !i_target.isValid() || i_target->GetObjectGuid() != u.GetOwnerGuid())
-        { return; }
+    {
+        return;
+    }
 
     u.UpdateSpeed(MOVE_RUN, true);
     u.UpdateSpeed(MOVE_WALK, true);
@@ -340,12 +375,16 @@ template<class T>
 float FollowMovementGenerator<T>::GetDynamicTargetDistance(T& owner, bool forRangeCheck) const
 {
     if (!forRangeCheck)
-        { return this->i_offset + owner.GetObjectBoundingRadius() + this->i_target->GetObjectBoundingRadius(); }
+    {
+        return this->i_offset + owner.GetObjectBoundingRadius() + this->i_target->GetObjectBoundingRadius();
+    }
 
     float allowed_dist = sWorld.getConfig(CONFIG_FLOAT_RATE_TARGET_POS_RECALCULATION_RANGE) - this->i_target->GetObjectBoundingRadius();
     allowed_dist += FOLLOW_RECALCULATE_FACTOR * (owner.GetObjectBoundingRadius() + this->i_target->GetObjectBoundingRadius());
     if (this->i_offset > FOLLOW_DIST_GAP_FOR_DIST_FACTOR)
-        { allowed_dist += FOLLOW_DIST_RECALCULATE_FACTOR * this->i_offset; }
+    {
+        allowed_dist += FOLLOW_DIST_RECALCULATE_FACTOR * this->i_offset;
+    }
 
     return allowed_dist;
 }

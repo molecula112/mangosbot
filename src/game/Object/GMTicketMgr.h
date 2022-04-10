@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -99,7 +99,7 @@ class GMTicket
         explicit GMTicket() : m_lastUpdate(0)
         {}
 
-        /** 
+        /**
          * Initializes this \ref GMTicket, much like the constructor would.
          * @param guid guid for the \ref Player that created the ticket
          * @param text the question text
@@ -108,71 +108,86 @@ class GMTicket
          */
         void Init(ObjectGuid guid, const std::string& text, const std::string& responseText, time_t update, uint32 ticketId);
 
-        /** 
+        /**
          * Gets the \ref Player s \ref ObjectGuid which asked the question and created the ticket
          * @return the \ref ObjectGuid for the \ref Player that asked the question
          */
-        ObjectGuid const& GetPlayerGuid() const { return m_guid; }
-        /** 
+        ObjectGuid const& GetPlayerGuid() const
+        {
+            return m_guid;
+        }
+        /**
          * Get the tickets question
          * @return the question this ticket had
          */
-        const char* GetText() const { return m_text.c_str(); }
-        /** 
+        const char* GetText() const
+        {
+            return m_text.c_str();
+        }
+        /**
          * Get the response given to this ticket, if any
          * @return the response that was made to this tickets question
          */
-        const char* GetResponse() const { return m_responseText.c_str(); }
-        /** 
+        const char* GetResponse() const
+        {
+            return m_responseText.c_str();
+        }
+        /**
          * Tells us when the last update was done as a UNIX timestamp.
          * @return Time since last update in seconds since UNIX epoch
          */
-        uint64 GetLastUpdate() const { return m_lastUpdate; }
-        /** 
+        uint64 GetLastUpdate() const
+        {
+            return m_lastUpdate;
+        }
+        /**
          * Gets the id for this \ref GMTicket, as represented in the database
          * table characters.character_ticket
          * @return id for this ticket in the database
          */
-        uint32 GetId() const { return m_ticketId; }
+        uint32 GetId() const
+        {
+            return m_ticketId;
+        }
 
-        /** 
+        /**
          * Changes the tickets question text.
          * @param text the text to change the question to
          */
         void SetText(const char* text);
-        /** 
+        /**
          * Changes the response to the ticket
          * @param text the response to give
          * \deprecated
          */
         void SetResponseText(const char* text);
 
-        /** 
+        /**
          * Has this ticket gotten a response?
          * @return true if there's some kind of response to this ticket, false otherwise
          * \deprecated
          * \todo Change to resolved/not resolved instead, via the check in db
          */
         bool HasResponse() { return !m_responseText.empty(); }
-        
-        /** 
+
+        /**
          * This will take care of a \ref OpcodesList::CMSG_GMSURVEY_SUBMIT packet
          * and save the data received into the database, this is not implemented yet
          * @param recvData the packet we received with answers to the survey
          * \todo Implement saving this to DB
          */
         void SaveSurveyData(WorldPacket& recvData) const;
-        /** 
+        /**
          * Close this ticket so that the window showing in the client for the \ref Player
          * disappears.
          */
         void Close() const;
-        /** 
+        /**
          * This closes the ticket aswell, but this is called when the client itself closed it
          * because they figured out the solution to their question
          */
         void CloseByClient() const;
-        /** 
+        /**
          * This does the same thing as \ref GMTicket::Close but it also shows a survey window to the
          * \ref Player so that they can answer how well the GM behaved and such.
          * \todo Save the survey results in DB!
@@ -180,7 +195,7 @@ class GMTicket
         void CloseWithSurvey() const;
     private:
         void _Close(GMTicketStatus statusCode) const;
-    
+
         ObjectGuid m_guid;
         uint32 m_ticketId;
         std::string m_text;
@@ -204,7 +219,9 @@ class GMTicketMgr
         {
             GMTicketMap::iterator itr = m_GMTicketMap.find(guid);
             if (itr == m_GMTicketMap.end())
-                { return NULL; }
+            {
+                return NULL;
+            }
             return &(itr->second);
         }
 
@@ -212,7 +229,9 @@ class GMTicketMgr
         {
             GMTicketIdMap::iterator itr = m_GMTicketIdMap.find(id);
             if (itr == m_GMTicketIdMap.end())
+            {
                 return NULL;
+            }
             return itr->second;
         }
 
@@ -224,16 +243,20 @@ class GMTicketMgr
         GMTicket* GetGMTicketByOrderPos(uint32 pos)
         {
             if (pos >= GetTicketCount())
-                { return NULL; }
+            {
+                return NULL;
+            }
 
             GMTicketMap::iterator itr = m_GMTicketMap.begin();
             std::advance(itr, pos);
             if (itr == m_GMTicketMap.end())
-                { return NULL; }
+            {
+                return NULL;
+            }
             return &(itr->second);
         }
 
-        /** 
+        /**
          * This will delete a \ref GMTicket from this manager of tickets so that we don't
          * need to handle it anymore, this should be used in conjunction with setting
          * resolved = 1 in the character_ticket table.
@@ -245,14 +268,16 @@ class GMTicketMgr
         {
             GMTicketMap::iterator itr = m_GMTicketMap.find(guid);
             if (itr == m_GMTicketMap.end())
-                { return; }
+            {
+                return;
+            }
             m_GMTicketIdMap.erase(itr->second.GetId());
             m_GMTicketMap.erase(itr);
         }
 
         void DeleteAll();
 
-        /** 
+        /**
          * This will create a new \ref GMTicket and fill it with the given question so that
          * a GM can find it and answer it. Should only be called if we've already checked
          * that there are no open tickets already, as this function will close any other
@@ -266,14 +291,14 @@ class GMTicketMgr
          */
         void Create(ObjectGuid guid, const char* text);
 
-        /** 
+        /**
          * Turns on/off accepting tickets globally, if this is off the client will see a message
          * telling them that filing tickets is currently unavailable. When it's on anyone can
          * file a ticket.
          * @param accept true means that we accept tickets, false means that we don't
          */
         void SetAcceptTickets(bool accept) { m_TicketSystemOn = accept; }
-        /** 
+        /**
          * Checks if we accept tickets globally (see \ref GMTicketMgr::SetAcceptTickets)
          * @return true if we are accepting tickets globally, false otherwise
          * \todo Perhaps rename to IsAcceptingTickets?

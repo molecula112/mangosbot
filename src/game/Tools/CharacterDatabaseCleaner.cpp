@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,28 +33,36 @@ void CharacterDatabaseCleaner::CleanDatabase()
 {
     // config to disable
     if (!sWorld.getConfig(CONFIG_BOOL_CLEAN_CHARACTER_DB))
-        { return; }
+    {
+        return;
+    }
 
     sLog.outString("Cleaning character database...");
 
     // check flags which clean ups are necessary
-    QueryResult* result = CharacterDatabase.PQuery("SELECT cleaning_flags FROM saved_variables");
+    QueryResult* result = CharacterDatabase.PQuery("SELECT `cleaning_flags` FROM `saved_variables`");
     if (!result)
-        { return; }
+    {
+        return;
+    }
     uint32 flags = (*result)[0].GetUInt32();
     delete result;
 
     // clean up
     if (flags & CLEANING_FLAG_SKILLS)
-        { CleanCharacterSkills(); }
+    {
+        CleanCharacterSkills();
+    }
     if (flags & CLEANING_FLAG_SPELLS)
-        { CleanCharacterSpell(); }
-    CharacterDatabase.Execute("UPDATE saved_variables SET cleaning_flags = 0");
+    {
+        CleanCharacterSpell();
+    }
+    CharacterDatabase.Execute("UPDATE `saved_variables` SET `cleaning_flags` = 0");
 }
 
 void CharacterDatabaseCleaner::CheckUnique(const char* column, const char* table, bool (*check)(uint32))
 {
-    QueryResult* result = CharacterDatabase.PQuery("SELECT DISTINCT %s FROM %s", column, table);
+    QueryResult* result = CharacterDatabase.PQuery("SELECT DISTINCT `%s` FROM `%s`", column, table);
     if (!result)
     {
         sLog.outString("Table %s is empty.", table);
@@ -76,11 +84,13 @@ void CharacterDatabaseCleaner::CheckUnique(const char* column, const char* table
         {
             if (!found)
             {
-                ss << "DELETE FROM " << table << " WHERE " << column << " IN (";
+                ss << "DELETE FROM `" << table << "` WHERE `" << column << "` IN (";
                 found = true;
             }
             else
-                { ss << ","; }
+            {
+                ss << ",";
+            }
             ss << id;
         }
     }

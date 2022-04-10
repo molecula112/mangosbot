@@ -1,7 +1,7 @@
 # MaNGOS is a full featured server for World of Warcraft, supporting
 # the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
 #
-# Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+# Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -40,7 +40,7 @@ set_property(GLOBAL
 option(BUILD_MANGOSD        "Build the main server"                         ON)
 option(BUILD_REALMD         "Build the login server"                        ON)
 option(BUILD_TOOLS          "Build the map/vmap/mmap extractors"            ON)
-option(USE_STORMLIB         "Use StormLib for reading MPQs"                 OFF)
+option(USE_STORMLIB         "Use StormLib for reading MPQs"                 ON)
 option(SCRIPT_LIB_ELUNA     "Compile with support for Eluna scripts"        ON)
 option(SCRIPT_LIB_SD3       "Compile with support for ScriptDev3 scripts"   ON)
 option(PLAYERBOTS           "Enable Player Bots"                            ON)
@@ -106,14 +106,16 @@ if(IMMERSIVE)
 else()
     message(STATUS "Enable Immersive      : No")
 endif()
-
 find_package(Threads REQUIRED)
 find_package(MySQL   REQUIRED)
-find_package(OpenSSL REQUIRED)
 find_package(DL      REQUIRED)
 
 find_package(ZLIB  QUIET)
 find_package(BZip2 QUIET)
+
+find_package(OpenSSL REQUIRED)
+
+include(${CMAKE_SOURCE_DIR}/cmake/EnsureVersion.cmake)
 
 include(${CMAKE_SOURCE_DIR}/cmake/MangosParams.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/SetDefinitions.cmake)

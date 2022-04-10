@@ -207,6 +207,10 @@ BindIP                       = "0.0.0.0"
 #        Default: 1 (Enable)
 #                 0 (Disabled)
 #
+#    MaxWhoListReturns
+#        Set the max number of players returned in the /who list and interface (0 means unlimited)
+#        Default:     49 - (stable)
+#
 ################################################################################
 
 UseProcessors                     = 0
@@ -236,6 +240,7 @@ UpdateUptimeInterval              = 10
 MaxCoreStuckTime                  = 0
 AddonChannel                      = 1
 CleanCharacterDB                  = 1
+MaxWhoListReturns                 = 49
 
 ################################################################################
 # SERVER LOGGING
@@ -668,6 +673,10 @@ SD3ErrorLogFile              = "scriptdev3-errors.log"
 #        Default: 0 (not allowed)
 #                 1 (allowed)
 #
+#    Guild.PetitionCost
+#        The cost for guild petition charter (in copper)
+#        Default: 1000 (10 silver)
+#
 #    Guild.EventLogRecordsCount
 #        Count of guild event log records stored in guild_eventlog table
 #        Increase to store more guild events in table, minimum is 100
@@ -818,6 +827,7 @@ Instance.UnloadDelay                      = 1800000
 Quests.LowLevelHideDiff                   = 4
 Quests.HighLevelHideDiff                  = 7
 Quests.IgnoreRaid                         = 0
+Guild.PetitionCost                        = 1000
 Guild.EventLogRecordsCount                = 100
 TimerBar.Fatigue.GMLevel                  = 4
 TimerBar.Fatigue.Max                      = 60
@@ -1158,6 +1168,10 @@ Channel.SilentlyGMJoin          = 0
 #        A spell that will be cast when a gm uses ".gm visible off" (Must be aura spell)
 #        Default: 31748 (Spirit Particles, big)
 #                 0 (Disabled)
+#     GM.MaxSpeedFactor
+#        Set the max speed factor whend using commands .mod speed / .mod aspeed  etc...
+#        Only Integer values
+#        Default: 10
 #
 ################################################################################
 
@@ -1174,6 +1188,7 @@ GM.LogTrade              = 1
 GM.StartLevel            = 1
 GM.LowerSecurity         = 0
 GM.InvisibleAura         = 31748
+GM.MaxSpeedFactor         = 10
 
 ################################################################################
 # VISIBILITY AND RADIUSES
@@ -1693,7 +1708,7 @@ CharDelete.KeepDays = 30
 #
 #    Warden.ClientCheckFailAction
 #        Description: Default action being taken if a client check failed. Actions can be
-#                     overwritten for each single check via warden_action table in characters 
+#                     overwritten for each single check via warden_action table in characters
 #                     database.
 #        Default:     1 - (Kick)
 #                     0 - (Disabled, Logging only)

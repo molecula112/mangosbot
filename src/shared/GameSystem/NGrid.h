@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -343,7 +343,9 @@ class NGrid
         {
             for (uint32 x = 0; x < N; ++x)
                 for (uint32 y = 0; y < N; ++y)
-                    { i_cells[x][y].Visit(visitor); }
+                {
+                    i_cells[x][y].Visit(visitor);
+                }
         }
 
         template<class T, class TT>
@@ -370,7 +372,9 @@ class NGrid
             uint32 count = 0;
             for (uint32 x = 0; x < N; ++x)
                 for (uint32 y = 0; y < N; ++y)
-                    { count += i_cells[x][y].ActiveObjectsInGrid(); }
+                {
+                    count += i_cells[x][y].ActiveObjectsInGrid();
+                }
 
             return count;
         }

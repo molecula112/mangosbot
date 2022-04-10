@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,10 +53,10 @@ namespace Movement
              * @return int32 duration - estimated travel time
              */
             int32 Launch();
-            
+
             /**
              * @brief Stop any creature movement
-             * 
+             *
              */
             void Stop();
 
@@ -95,7 +95,7 @@ namespace Movement
              * @param destination
              * @param generatePath
              * @param forceDestination
-             * @param maxPathRange 
+             * @param maxPathRange
              */
             void MoveTo(const Vector3& destination, bool generatePath = false, bool forceDestination = false, float maxPathRange = 0.0f);
             /**
@@ -213,6 +213,7 @@ namespace Movement
      * @param z
      * @param generatePath
      * @param forceDestination
+     * @param maxPathRange
      */
     inline void MoveSplineInit::MoveTo(float x, float y, float z, bool generatePath, bool forceDestination, float maxPathRange)
     {
@@ -226,6 +227,7 @@ namespace Movement
      * @param dest
      * @param generatePath
      * @param forceDestination
+     * @param maxPathRange
      */
     inline void MoveSplineInit::MoveTo(const Vector3& dest, bool generatePath, bool forceDestination, float maxPathRange)
     {

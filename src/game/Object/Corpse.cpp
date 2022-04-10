@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,7 +54,9 @@ void Corpse::AddToWorld()
 {
     ///- Register the corpse for guid lookup
     if (!IsInWorld())
-        { sObjectAccessor.AddObject(this); }
+    {
+        sObjectAccessor.AddObject(this);
+    }
 
     Object::AddToWorld();
 }
@@ -63,7 +65,9 @@ void Corpse::RemoveFromWorld()
 {
     ///- Remove the corpse from the accessor
     if (IsInWorld())
-        { sObjectAccessor.RemoveObject(this); }
+    {
+        sObjectAccessor.RemoveObject(this);
+    }
 
     Object::RemoveFromWorld();
 }
@@ -114,7 +118,7 @@ void Corpse::SaveToDB()
     DeleteFromDB();
 
     std::ostringstream ss;
-    ss  << "INSERT INTO corpse (guid,player,position_x,position_y,position_z,orientation,map,time,corpse_type,instance) VALUES ("
+    ss  << "INSERT INTO `corpse` (`guid`,`player`,`position_x`,`position_y`,`position_z`,`orientation`,`map`,`time`,`corpse_type`,`instance`) VALUES ("
         << GetGUIDLow() << ", "
         << GetOwnerGuid().GetCounter() << ", "
         << GetPositionX() << ", "
@@ -151,16 +155,16 @@ void Corpse::DeleteFromDB()
     // all corpses (not bones)
     static SqlStatementID id;
 
-    SqlStatement stmt = CharacterDatabase.CreateStatement(id, "DELETE FROM corpse WHERE player = ? AND corpse_type <> '0'");
+    SqlStatement stmt = CharacterDatabase.CreateStatement(id, "DELETE FROM `corpse` WHERE `player` = ? AND `corpse_type` <> '0'");
     stmt.PExecute(GetOwnerGuid().GetCounter());
 }
 
 bool Corpse::LoadFromDB(uint32 lowguid, Field* fields)
 {
     ////                                                    0            1       2                  3                  4                  5                   6
-    // QueryResult *result = CharacterDatabase.Query("SELECT corpse.guid, player, corpse.position_x, corpse.position_y, corpse.position_z, corpse.orientation, corpse.map,"
+    // QueryResult *result = CharacterDatabase.Query("SELECT `corpse`.`guid`, `player`, `corpse`.`position_x`, `corpse`.`position_y`, `corpse`.`position_z`, `corpse`.`orientation`, `corpse`.`map`,"
     ////   7     8            9         10      11    12     13           14            15              16       17
-    //    "time, corpse_type, instance, gender, race, class, playerBytes, playerBytes2, equipmentCache, guildId, playerFlags FROM corpse"
+    //    "`time`, `corpse_type`, `instance`, `gender`, `race`, `class`, `playerBytes`, `playerBytes2`, `equipmentCache`, `guildId`, `playerFlags` FROM `corpse`"
     uint32 playerLowGuid = fields[1].GetUInt32();
     float positionX     = fields[2].GetFloat();
     float positionY     = fields[3].GetFloat();
@@ -233,9 +237,13 @@ bool Corpse::LoadFromDB(uint32 lowguid, Field* fields)
 
     uint32 flags = CORPSE_FLAG_UNK2;
     if (playerFlags & PLAYER_FLAGS_HIDE_HELM)
-        { flags |= CORPSE_FLAG_HIDE_HELM; }
+    {
+        flags |= CORPSE_FLAG_HIDE_HELM;
+    }
     if (playerFlags & PLAYER_FLAGS_HIDE_CLOAK)
-        { flags |= CORPSE_FLAG_HIDE_CLOAK; }
+    {
+        flags |= CORPSE_FLAG_HIDE_CLOAK;
+    }
     SetUInt32Value(CORPSE_FIELD_FLAGS, flags);
 
     // no need to mark corpse as lootable, because corpses are not saved in battle grounds
@@ -265,23 +273,35 @@ bool Corpse::IsVisibleForInState(Player const* u, WorldObject const* viewPoint, 
 bool Corpse::IsHostileTo(Unit const* unit) const
 {
     if (Player* owner = sObjectMgr.GetPlayer(GetOwnerGuid()))
-        { return owner->IsHostileTo(unit); }
+    {
+        return owner->IsHostileTo(unit);
+    }
     else
-        { return false; }
+    {
+        return false;
+    }
 }
 
 bool Corpse::IsFriendlyTo(Unit const* unit) const
 {
     if (Player* owner = sObjectMgr.GetPlayer(GetOwnerGuid()))
-        { return owner->IsFriendlyTo(unit); }
+    {
+        return owner->IsFriendlyTo(unit);
+    }
     else
-        { return true; }
+    {
+        return true;
+    }
 }
 
 bool Corpse::IsExpired(time_t t) const
 {
     if (m_type == CORPSE_BONES)
-        { return m_time < t - 60 * MINUTE; }
+    {
+        return m_time < t - 60 * MINUTE;
+    }
     else
-        { return m_time < t - 3 * DAY; }
+    {
+        return m_time < t - 3 * DAY;
+    }
 }

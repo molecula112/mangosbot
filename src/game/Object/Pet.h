@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -124,8 +124,6 @@ enum PetTalk
     PET_TALK_ATTACK         = 1
 };
 
-
-// [-ZERO] Need recheck and drop not existed cases
 enum PetNameInvalidReason
 {
     // custom, not send
@@ -193,18 +191,26 @@ class Pet : public Creature
         uint32 GetPetAutoSpellOnPos(uint8 pos) const override
         {
             if (pos >= m_autospells.size())
-                { return 0; }
+            {
+                return 0;
+            }
             else
-                { return m_autospells[pos]; }
+            {
+                return m_autospells[pos];
+            }
         }
 
         virtual bool CanSwim() const override
         {
             Unit const* owner = GetOwner();
             if (owner)
-                { return owner->GetTypeId() == TYPEID_PLAYER ? true : ((Creature const*)owner)->CanSwim(); }
+            {
+                return owner->GetTypeId() == TYPEID_PLAYER ? true : ((Creature const*)owner)->CanSwim();
+            }
             else
-                { return Creature::CanSwim(); }
+            {
+                return Creature::CanSwim();
+            }
         }
 
         virtual bool CanFly() const override { return false; } // pet are not able to fly. TODO: check if this is right

@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@ void GMTicket::SaveSurveyData(WorldPacket& recvData) const
     uint32 x;
     recvData >> x;                                         // answer range? (6 = 0-5?)
     DEBUG_LOG("SURVEY: X = %u", x);
-    
+
     uint8 result[10];
     memset(result, 0, sizeof(result));
     for (int i = 0; i < 10; ++i)
@@ -47,21 +47,23 @@ void GMTicket::SaveSurveyData(WorldPacket& recvData) const
         uint32 questionID;
         recvData >> questionID;                            // GMSurveyQuestions.dbc
         if (!questionID)
+        {
             break;
-        
+        }
+
         uint8 value;
         std::string unk_text;
         recvData >> value;                                 // answer
         recvData >> unk_text;                              // always empty?
-        
+
         result[i] = value;
         DEBUG_LOG("SURVEY: ID %u, value %u, text %s", questionID, value, unk_text.c_str());
     }
-    
+
     std::string comment;
     recvData >> comment;                                   // addional comment
     DEBUG_LOG("SURVEY: comment %s", comment.c_str());
-    
+
     // TODO: chart this data in some way in DB
 }
 
@@ -81,21 +83,26 @@ void GMTicket::SetText(const char* text)
 
     std::string escapedString = m_text;
     CharacterDatabase.escape_string(escapedString);
-    CharacterDatabase.PExecute("UPDATE character_ticket SET ticket_text = '%s' "
-                               "WHERE guid = '%u'",
-                               escapedString.c_str(), m_guid.GetCounter());
+    CharacterDatabase.PExecute("UPDATE `character_ticket` SET `ticket_text` = '%s' "
+                               "WHERE `guid` = '%u' AND `ticket_id` = %u",
+                               escapedString.c_str(), m_guid.GetCounter(), m_ticketId);
 }
 
 void GMTicket::SetResponseText(const char* text)
 {
     m_responseText = text ? text : "";
-    m_lastUpdate = time(NULL);
 
-    std::string escapedString = m_responseText;
-    CharacterDatabase.escape_string(escapedString);
-    CharacterDatabase.PExecute("UPDATE character_ticket SET response_text = '%s' "
-                               "WHERE guid = '%u'",
-                               escapedString.c_str(), m_guid.GetCounter());
+    // Perform action in DB only if text is not empty
+    if (m_responseText != "")
+    {
+        m_lastUpdate = time(NULL);
+
+        std::string escapedString = m_responseText;
+        CharacterDatabase.escape_string(escapedString);
+        CharacterDatabase.PExecute("UPDATE `character_ticket` SET `response_text` = '%s' "
+            "WHERE `guid` = '%u' and `ticket_id` = %u",
+            escapedString.c_str(), m_guid.GetCounter(), m_ticketId);
+    }
 }
 
 void GMTicket::CloseWithSurvey() const
@@ -116,14 +123,16 @@ void GMTicket::Close() const
 void GMTicket::_Close(GMTicketStatus statusCode) const
 {
     Player* pPlayer = sObjectMgr.GetPlayer(m_guid);
-    
-    CharacterDatabase.PExecute("UPDATE character_ticket "
-                               "SET resolved = 1 "
-                               "WHERE guid = %u AND resolved = 0",
+
+    CharacterDatabase.PExecute("UPDATE `character_ticket` "
+                               "SET `resolved` = 1 "
+                               "WHERE `guid` = %u AND `resolved` = 0",
                                m_guid.GetCounter());
-    
+
     if (pPlayer && statusCode != GM_TICKET_STATUS_DO_NOTHING)
-        { pPlayer->GetSession()->SendGMTicketStatusUpdate(statusCode); }
+    {
+        pPlayer->GetSession()->SendGMTicketStatusUpdate(statusCode);
+    }
 }
 
 void GMTicketMgr::LoadGMTickets()
@@ -131,12 +140,12 @@ void GMTicketMgr::LoadGMTickets()
     m_GMTicketMap.clear();                                  // For reload case
 
     QueryResult* result = CharacterDatabase.Query(
-    //      0     1            2              3                                  4
-    "SELECT guid, ticket_text, response_text, UNIX_TIMESTAMP(ticket_lastchange), ticket_id "
-    "FROM character_ticket "
-    "WHERE resolved = 0 "
-    "ORDER BY ticket_id ASC");
-    
+    //       0       1              2                3                                    4
+    "SELECT `guid`, `ticket_text`, `response_text`, UNIX_TIMESTAMP(`ticket_lastchange`), `ticket_id` "
+    "FROM `character_ticket` "
+    "WHERE `resolved` = 0 "
+    "ORDER BY `ticket_id` ASC");
+
     if (!result)
     {
         BarGoLink bar(1);
@@ -156,11 +165,13 @@ void GMTicketMgr::LoadGMTickets()
 
         uint32 guidlow = fields[0].GetUInt32();
         if (!guidlow)
-            { continue; }
+        {
+            continue;
+        }
 
         ObjectGuid guid = ObjectGuid(HIGHGUID_PLAYER, guidlow);
         GMTicket& ticket = m_GMTicketMap[guid];
-        
+
         ticket.Init(guid, fields[1].GetCppString(), fields[2].GetCppString(), time_t(fields[3].GetUInt64()), fields[4].GetUInt32());
         m_GMTicketIdMap[ticket.GetId()] = &ticket;
     }
@@ -177,31 +188,37 @@ void GMTicketMgr::Create(ObjectGuid guid, const char* text)
     CharacterDatabase.escape_string(escapedText);
     CharacterDatabase.BeginTransaction();
     //This needs to be Direct (not placed in queue) as we need the id of it soon afterwards
-    CharacterDatabase.DirectPExecute("INSERT INTO character_ticket "
-                                     "(guid, ticket_text) "
+    CharacterDatabase.DirectPExecute("INSERT INTO `character_ticket` "
+                                     "(`guid`, `ticket_text`) "
                                      "VALUES "
                                      "(%u,   '%s')",
                                      guid.GetCounter(), escapedText.c_str());
-    
-    //Get the id of the ticket, needed for logging whispers
-    QueryResult* result = CharacterDatabase.PQuery("SELECT ticket_id, guid, resolved "
-                                                   "FROM character_ticket "
-                                                   "WHERE guid = %u AND resolved = 0;",
+
+    // Get the id of the ticket, needed for logging whispers
+    // Limiting to the the most recent ticket of the player and avoid potential multiple returns
+    // if there is inconsistent data in table (e.g : more than 1 ticket unsolved for the same player (should never happen but..who knows..)
+    QueryResult* result = CharacterDatabase.PQuery("SELECT `ticket_id`, `guid`, `resolved` "
+                                                   "FROM `character_ticket` "
+                                                   "WHERE `guid` = %u AND `resolved` = 0 ORDER BY `ticket_id` DESC LIMIT 1;",
                                                    guid.GetCounter());
-    
+
     CharacterDatabase.CommitTransaction();
-    
+
     if (!result)
+    {
         return;
-    
+    }
+
     Field* fields = result->Fetch();
     uint32 ticketId = fields[0].GetUInt32();
-    
+
     //This implicitly creates a new instance since we're using operator[]
     GMTicket& ticket = m_GMTicketMap[guid];
     if (ticket.GetPlayerGuid())
+    {
         m_GMTicketIdMap.erase(ticketId);
-            
+    }
+
     //Lets reinitialize with new data
     ticket.Init(guid, text, "", time(NULL), ticketId);
     m_GMTicketIdMap[ticketId] = &ticket;
@@ -212,9 +229,11 @@ void GMTicketMgr::DeleteAll()
     for (GMTicketMap::const_iterator itr = m_GMTicketMap.begin(); itr != m_GMTicketMap.end(); ++itr)
     {
         if (Player* owner = sObjectMgr.GetPlayer(itr->first))
-            { owner->GetSession()->SendGMTicketGetTicket(0x0A); }
+        {
+            owner->GetSession()->SendGMTicketGetTicket(0x0A);
+        }
     }
-    CharacterDatabase.Execute("DELETE FROM character_ticket");
+    CharacterDatabase.Execute("DELETE FROM `character_ticket`");
     m_GMTicketIdMap.clear();
     m_GMTicketMap.clear();
 }

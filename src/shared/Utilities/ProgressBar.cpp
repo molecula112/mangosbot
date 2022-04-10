@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,7 +44,9 @@ BarGoLink::BarGoLink(int row_count)
 BarGoLink::~BarGoLink()
 {
     if (!m_showOutput)
-        { return; }
+    {
+        return;
+    }
 
     printf("\n");
     fflush(stdout);
@@ -58,30 +60,42 @@ void BarGoLink::init(int row_count)
     num_rec   = row_count;
 
     if (!m_showOutput)
-        { return; }
+    {
+        return;
+    }
 
 #ifdef _WIN32
     printf("\x3D");
 #else
     printf("[");
 #endif
-    for (int i = 0; i < indic_len; ++i) { printf(empty); }
+
+    for (int i = 0; i < indic_len; ++i)
+    {
+        printf(empty);
+    }
 #ifdef _WIN32
     printf("\x3D 0%%\r\x3D");
 #else
     printf("] 0%%\r[");
 #endif
+
     fflush(stdout);
 }
 
 void BarGoLink::step()
 {
     if (!m_showOutput)
-        { return; }
+    {
+        return;
+    }
 
     int i, n;
 
-    if (num_rec == 0) { return; }
+    if (num_rec == 0)
+    {
+        return;
+    }
     ++rec_no;
     n = rec_no * indic_len / num_rec;
     if (n != rec_pos)
@@ -91,14 +105,22 @@ void BarGoLink::step()
 #else
         printf("\r[");
 #endif
-        for (i = 0; i < n; ++i) { printf(full); }
-        for (; i < indic_len; ++i) { printf(empty); }
+
+        for (i = 0; i < n; ++i)
+        {
+            printf(full);
+        }
+        for (; i < indic_len; ++i)
+        {
+            printf(empty);
+        }
         float percent = (((float)n / (float)indic_len) * 100);
 #ifdef _WIN32
         printf("\x3D %i%%  \r\x3D", (int)percent);
 #else
         printf("] %i%%  \r[", (int)percent);
 #endif
+
         fflush(stdout);
 
         rec_pos = n;

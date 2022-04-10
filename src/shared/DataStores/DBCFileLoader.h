@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -199,11 +199,11 @@ class DBCFileLoader
          */
         char* AutoProduceStrings(const char* fmt, char* dataTable);
         /**
-         * @brief
+         * Calculate and return the total amount of memory required by the types specified within the format string
          *
-         * @param format
+         * @param format the format string passed to it (see DBCfmt.h)
          * @param index_pos
-         * @return uint32
+         * @return uint32 the total amount of memory required for all the data types
          */
         static uint32 GetFormatRecordSize(const char* format, int32* index_pos = NULL);
     private:

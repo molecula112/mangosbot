@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -106,7 +106,9 @@ class RegularGrid2D
         {
             for (int x = 0; x < CELL_NUMBER; ++x)
                 for (int y = 0; y < CELL_NUMBER; ++y)
-                    { delete nodes[x][y]; }
+                {
+                    delete nodes[x][y];
+                }
         }
 
         /**
@@ -144,7 +146,9 @@ class RegularGrid2D
             for (int x = 0; x < CELL_NUMBER; ++x)
                 for (int y = 0; y < CELL_NUMBER; ++y)
                     if (Node* n = nodes[x][y])
-                        { n->balance(); }
+                    {
+                        n->balance();
+                    }
         }
 
         /**
@@ -221,7 +225,9 @@ class RegularGrid2D
         {
             MANGOS_ASSERT(x < CELL_NUMBER && y < CELL_NUMBER);
             if (!nodes[x][y])
-                { nodes[x][y] = NodeCreatorFunc::makeNode(x, y); }
+            {
+                nodes[x][y] = NodeCreatorFunc::makeNode(x, y);
+            }
             return *nodes[x][y];
         }
 
@@ -251,14 +257,18 @@ class RegularGrid2D
         {
             Cell cell = Cell::ComputeCell(ray.origin().x, ray.origin().y);
             if (!cell.isValid())
-                { return; }
+            {
+                return;
+            }
 
             Cell last_cell = Cell::ComputeCell(end.x, end.y);
 
             if (cell == last_cell)
             {
                 if (Node* node = nodes[cell.x][cell.y])
-                    { node->intersectRay(ray, intersectCallback, max_dist); }
+                {
+                    node->intersectRay(ray, intersectCallback, max_dist);
+                }
                 return;
             }
 
@@ -307,7 +317,9 @@ class RegularGrid2D
                     node->intersectRay(ray, intersectCallback, max_dist);
                 }
                 if (cell == last_cell)
-                    { break; }
+                {
+                    break;
+                }
                 if (tMaxX < tMaxY)
                 {
                     tMaxX += tDeltaX;
@@ -334,9 +346,13 @@ class RegularGrid2D
         {
             Cell cell = Cell::ComputeCell(point.x, point.y);
             if (!cell.isValid())
-                { return; }
+            {
+                return;
+            }
             if (Node* node = nodes[cell.x][cell.y])
-                { node->intersectPoint(point, intersectCallback); }
+            {
+                node->intersectPoint(point, intersectCallback);
+            }
         }
 
         template<typename RayCallback>
@@ -351,9 +367,13 @@ class RegularGrid2D
         {
             Cell cell = Cell::ComputeCell(ray.origin().x, ray.origin().y);
             if (!cell.isValid())
-                { return; }
+            {
+                return;
+            }
             if (Node* node = nodes[cell.x][cell.y])
-                { node->intersectRay(ray, intersectCallback, max_dist); }
+            {
+                node->intersectRay(ray, intersectCallback, max_dist);
+            }
         }
 };
 

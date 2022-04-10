@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -103,7 +103,7 @@ enum EventAI_ActionType
     ACTION_T_INC_PHASE                  = 23,               // Value (may be negative to decrement phase, should not be 0)
     ACTION_T_EVADE                      = 24,               // No Params
     ACTION_T_FLEE_FOR_ASSIST            = 25,               // No Params
-    ACTION_T_QUEST_EVENT_ALL            = 26,               // QuestID
+    ACTION_T_QUEST_EVENT_ALL            = 26,               // QuestID, UseThreatList (1 = true, 0 = false)
     ACTION_T_CAST_EVENT_ALL             = 27,               // CreatureId, SpellId
     ACTION_T_REMOVEAURASFROMSPELL       = 28,               // Target, Spellid
     ACTION_T_RANGED_MOVEMENT            = 29,               // Distance, Angle
@@ -137,19 +137,19 @@ enum Target
     // Self (m_creature)
     TARGET_T_SELF                           = 0,            // Self cast
 
-    // Hostile targets
+    // Hostile targets (if pet then returns pet owner)
     TARGET_T_HOSTILE                        = 1,            // Our current target (ie: highest aggro)
     TARGET_T_HOSTILE_SECOND_AGGRO           = 2,            // Second highest aggro (generaly used for cleaves and some special attacks)
     TARGET_T_HOSTILE_LAST_AGGRO             = 3,            // Dead last on aggro (no idea what this could be used for)
     TARGET_T_HOSTILE_RANDOM                 = 4,            // Just any random target on our threat list
     TARGET_T_HOSTILE_RANDOM_NOT_TOP         = 5,            // Any random target except top threat
 
-    // Invoker targets
+    // Invoker targets (if pet then returns pet owner)
     TARGET_T_ACTION_INVOKER                 = 6,            // Unit who caused this Event to occur (only works for EVENT_T_AGGRO, EVENT_T_KILL, EVENT_T_DEATH, EVENT_T_SPELLHIT, EVENT_T_OOC_LOS, EVENT_T_FRIENDLY_HP, EVENT_T_FRIENDLY_IS_CC, EVENT_T_FRIENDLY_MISSING_BUFF, EVENT_T_RECEIVE_EMOTE, EVENT_T_RECEIVE_AI_EVENT)
     TARGET_T_ACTION_INVOKER_OWNER           = 7,            // Unit who is responsible for Event to occur (only works for EVENT_T_AGGRO, EVENT_T_KILL, EVENT_T_DEATH, EVENT_T_SPELLHIT, EVENT_T_OOC_LOS, EVENT_T_FRIENDLY_HP, EVENT_T_FRIENDLY_IS_CC, EVENT_T_FRIENDLY_MISSING_BUFF, EVENT_T_RECEIVE_EMOTE, EVENT_T_RECEIVE_AI_EVENT)
     TARGET_T_EVENT_SENDER                   = 10,           // Unit who sent an AIEvent that was received with EVENT_T_RECEIVE_AI_EVENT
 
-    // Hostile players
+    // Hostile targets (including pets)
     TARGET_T_HOSTILE_RANDOM_PLAYER          = 8,            // Just any random player on our threat list
     TARGET_T_HOSTILE_RANDOM_NOT_TOP_PLAYER  = 9,            // Any random player from threat list except top threat
 
@@ -429,7 +429,7 @@ struct CreatureEventAI_Action
             uint32 creatureId;
             uint32 target;
             uint32 spawnId;
-        } summon_unique;        
+        } summon_unique;
         // ACTION_T_EMOTE_TARGET                            = 50
         struct
         {
@@ -596,7 +596,7 @@ struct CreatureEventAI_Event
             int positionX;
             int positionY;
             int positionZ;
-            int distance;                                   // Distance from the waypoint 
+            int distance;                                   // Distance from the waypoint
         } reached_waypoint;
         // RAW
         struct

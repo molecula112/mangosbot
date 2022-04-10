@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,7 +38,9 @@
 bool Player::UpdateStats(Stats stat)
 {
     if (stat > STAT_SPIRIT)
-        { return false; }
+    {
+        return false;
+    }
 
     // value = ((base_value * base_pct) + total_value) * total_pct
     float value  = GetTotalStatValue(stat);
@@ -84,7 +86,9 @@ void Player::UpdateSpellDamageAndHealingBonus()
     // Get healing bonus for all schools
     // Get damage bonus for all schools
     for (int i = SPELL_SCHOOL_HOLY; i < MAX_SPELL_SCHOOL; ++i)
-        { SetStatInt32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_POS + i, SpellBaseDamageBonusDone(GetSchoolMask(i))); }
+    {
+        SetStatInt32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_POS + i, SpellBaseDamageBonusDone(GetSchoolMask(i)));
+    }
 }
 
 bool Player::UpdateAllStats()
@@ -101,7 +105,9 @@ bool Player::UpdateAllStats()
     UpdateMaxHealth();
 
     for (int i = POWER_MANA; i < MAX_POWERS; ++i)
-        { UpdateMaxPower(Powers(i)); }
+    {
+        UpdateMaxPower(Powers(i));
+    }
 
     UpdateAllCritPercentages();
     UpdateAllSpellCritChances();
@@ -109,7 +115,9 @@ bool Player::UpdateAllStats()
     UpdateSpellDamageAndHealingBonus();
     UpdateManaRegen();
     for (int i = SPELL_SCHOOL_NORMAL; i < MAX_SPELL_SCHOOL; ++i)
-        { UpdateResistances(i); }
+    {
+        UpdateResistances(i);
+    }
 
     return true;
 }
@@ -122,7 +130,9 @@ void Player::UpdateResistances(uint32 school)
         SetResistance(SpellSchools(school), int32(value));
     }
     else
-        { UpdateArmor(); }
+    {
+        UpdateArmor();
+    }
 }
 
 void Player::UpdateArmor()
@@ -141,7 +151,9 @@ void Player::UpdateArmor()
     {
         Modifier* mod = (*i)->GetModifier();
         if (mod->m_miscvalue & SPELL_SCHOOL_MASK_NORMAL)
-            { value += int32(GetStat(STAT_INTELLECT) * mod->m_amount / 100.0f); }
+        {
+            value += int32(GetStat(STAT_INTELLECT) * mod->m_amount / 100.0f);
+        }
     }
 
     value *= GetModifierValue(unitMod, TOTAL_PCT);
@@ -310,29 +322,27 @@ void Player::UpdateAttackPowerAndDamage(bool ranged)
     {
         UpdateDamagePhysical(BASE_ATTACK);
         if (CanDualWield() && haveOffhandWeapon())          // allow update offhand damage only if player knows DualWield Spec and has equipped offhand weapon
-            { UpdateDamagePhysical(OFF_ATTACK); }
+        {
+            UpdateDamagePhysical(OFF_ATTACK);
+        }
     }
 }
 
 void Player::CalculateMinMaxDamage(WeaponAttackType attType, bool normalized, float& min_damage, float& max_damage)
 {
     UnitMods unitMod;
-    //UnitMods attPower;
 
     switch (attType)
     {
         case BASE_ATTACK:
         default:
             unitMod = UNIT_MOD_DAMAGE_MAINHAND;
-            //attPower = UNIT_MOD_ATTACK_POWER;
             break;
         case OFF_ATTACK:
             unitMod = UNIT_MOD_DAMAGE_OFFHAND;
-            //attPower = UNIT_MOD_ATTACK_POWER;
             break;
         case RANGED_ATTACK:
             unitMod = UNIT_MOD_DAMAGE_RANGED;
-            //attPower = UNIT_MOD_ATTACK_POWER_RANGED;
             break;
     }
 
@@ -350,7 +360,9 @@ void Player::CalculateMinMaxDamage(WeaponAttackType attType, bool normalized, fl
     {
         uint32 lvl = getLevel();
         if (lvl > 60)
-            { lvl = 60; }
+        {
+            lvl = 60;
+        }
 
         weapon_mindamage = lvl * 0.85f * att_speed;
         weapon_maxdamage = lvl * 1.25f * att_speed;
@@ -362,8 +374,9 @@ void Player::CalculateMinMaxDamage(WeaponAttackType attType, bool normalized, fl
     }
     else if (attType == RANGED_ATTACK)                      // add ammo DPS to ranged damage
     {
-        weapon_mindamage += GetAmmoDPS() * att_speed;
-        weapon_maxdamage += GetAmmoDPS() * att_speed;
+        std::pair<float,float> ammoDps = GetAmmoDPS();
+        weapon_mindamage += ammoDps.first * att_speed;
+        weapon_maxdamage += ammoDps.second * att_speed;
     }
 
     min_damage = ((base_value + weapon_mindamage) * base_pct + total_value) * total_pct;
@@ -512,7 +525,9 @@ void Player::UpdateSpellCritChance(uint32 school)
 void Player::UpdateAllSpellCritChances()
 {
     for (int i = SPELL_SCHOOL_NORMAL; i < MAX_SPELL_SCHOOL; ++i)
-        { UpdateSpellCritChance(i); }
+    {
+        UpdateSpellCritChance(i);
+    }
 }
 
 void Player::UpdateManaRegen()
@@ -528,7 +543,9 @@ void Player::UpdateManaRegen()
     // Set regen rate in cast state apply only on spirit based regen
     int32 modManaRegenInterrupt = GetTotalAuraModifier(SPELL_AURA_MOD_MANA_REGEN_INTERRUPT);
     if (modManaRegenInterrupt > 100)
-        { modManaRegenInterrupt = 100; }
+    {
+        modManaRegenInterrupt = 100;
+    }
 
     m_modManaRegenInterrupt = power_regen_mp5 + power_regen * modManaRegenInterrupt / 100.0f;
 
@@ -576,10 +593,14 @@ bool Creature::UpdateAllStats()
     UpdateAttackPowerAndDamage();
 
     for (int i = POWER_MANA; i < MAX_POWERS; ++i)
-        { UpdateMaxPower(Powers(i)); }
+    {
+        UpdateMaxPower(Powers(i));
+    }
 
     for (int i = SPELL_SCHOOL_NORMAL; i < MAX_SPELL_SCHOOL; ++i)
-        { UpdateResistances(i); }
+    {
+        UpdateResistances(i);
+    }
 
     return true;
 }
@@ -592,7 +613,9 @@ void Creature::UpdateResistances(uint32 school)
         SetResistance(SpellSchools(school), int32(value));
     }
     else
-        { UpdateArmor(); }
+    {
+        UpdateArmor();
+    }
 }
 
 void Creature::UpdateArmor()
@@ -639,7 +662,9 @@ void Creature::UpdateAttackPowerAndDamage(bool ranged)
     SetFloatValue(index_mult, attPowerMultiplier);          // UNIT_FIELD_(RANGED)_ATTACK_POWER_MULTIPLIER field
 
     if (ranged)
-        { return; }
+    {
+        return;
+    }
 
     // automatically update weapon damage after attack power modification
     UpdateDamagePhysical(BASE_ATTACK);
@@ -649,7 +674,9 @@ void Creature::UpdateAttackPowerAndDamage(bool ranged)
 void Creature::UpdateDamagePhysical(WeaponAttackType attType)
 {
     if (attType > OFF_ATTACK)
-        { return; }
+    {
+        return;
+    }
 
     UnitMods unitMod = (attType == BASE_ATTACK ? UNIT_MOD_DAMAGE_MAINHAND : UNIT_MOD_DAMAGE_OFFHAND);
 
@@ -680,7 +707,9 @@ void Creature::UpdateDamagePhysical(WeaponAttackType attType)
 bool Pet::UpdateStats(Stats stat)
 {
     if (stat > STAT_SPIRIT)
-        { return false; }
+    {
+        return false;
+    }
 
     // value = ((base_value * base_pct) + total_value) * total_pct
     float value  = GetTotalStatValue(stat);
@@ -703,13 +732,19 @@ bool Pet::UpdateStats(Stats stat)
 bool Pet::UpdateAllStats()
 {
     for (int i = STAT_STRENGTH; i < MAX_STATS; ++i)
-        { UpdateStats(Stats(i)); }
+    {
+        UpdateStats(Stats(i));
+    }
 
     for (int i = POWER_MANA; i < MAX_POWERS; ++i)
-        { UpdateMaxPower(Powers(i)); }
+    {
+        UpdateMaxPower(Powers(i));
+    }
 
     for (int i = SPELL_SCHOOL_NORMAL; i < MAX_SPELL_SCHOOL; ++i)
-        { UpdateResistances(i); }
+    {
+        UpdateResistances(i);
+    }
 
     return true;
 }
@@ -722,7 +757,9 @@ void Pet::UpdateResistances(uint32 school)
         SetResistance(SpellSchools(school), int32(value));
     }
     else
-        { UpdateArmor(); }
+    {
+        UpdateArmor();
+    }
 }
 
 void Pet::UpdateArmor()
@@ -769,15 +806,21 @@ void Pet::UpdateMaxPower(Powers power)
 void Pet::UpdateAttackPowerAndDamage(bool ranged)
 {
     if (ranged)
-        { return; }
+    {
+        return;
+    }
 
     float val = 0.0f;
     UnitMods unitMod = UNIT_MOD_ATTACK_POWER;
 
     if (GetEntry() == 416)                                  // imp's attack power
-        { val = GetStat(STAT_STRENGTH) - 10.0f; }
+    {
+        val = GetStat(STAT_STRENGTH) - 10.0f;
+    }
     else
-        { val = 2 * GetStat(STAT_STRENGTH) - 20.0f; }
+    {
+        val = 2 * GetStat(STAT_STRENGTH) - 20.0f;
+    }
 
     SetModifierValue(UNIT_MOD_ATTACK_POWER, BASE_VALUE, val);
     // in BASE_VALUE of UNIT_MOD_ATTACK_POWER for creatures we store data of meleeattackpower field in DB
@@ -799,7 +842,9 @@ void Pet::UpdateAttackPowerAndDamage(bool ranged)
 void Pet::UpdateDamagePhysical(WeaponAttackType attType)
 {
     if (attType > BASE_ATTACK)
-        { return; }
+    {
+        return;
+    }
 
     UnitMods unitMod = UNIT_MOD_DAMAGE_MAINHAND;
 

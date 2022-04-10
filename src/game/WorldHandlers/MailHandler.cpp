@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -99,16 +99,22 @@ void WorldSession::HandleSendMail(WorldPacket& recv_data)
     // packet read complete, now do check
 
     if (!CheckMailBox(mailboxGuid))
-        { return; }
+    {
+        return;
+    }
 
     if (receiver.empty())
-        { return; }
+    {
+        return;
+    }
 
     Player* pl = _player;
 
     ObjectGuid rc;
     if (normalizePlayerName(receiver))
-        { rc = sObjectMgr.GetPlayerGuidByName(receiver); }
+    {
+        rc = sObjectMgr.GetPlayerGuidByName(receiver);
+    }
 
     if (!rc)
     {
@@ -124,6 +130,13 @@ void WorldSession::HandleSendMail(WorldPacket& recv_data)
     if (pl->GetObjectGuid() == rc)
     {
         pl->SendMailResult(0, MAIL_SEND, MAIL_ERR_CANNOT_SEND_TO_SELF);
+        return;
+    }
+
+    // safeguard against possible money dupe
+    if (money && COD)
+    {
+        pl->SendMailResult(0, MAIL_SEND, MAIL_ERR_INTERNAL_ERROR);
         return;
     }
 
@@ -148,7 +161,7 @@ void WorldSession::HandleSendMail(WorldPacket& recv_data)
     else
     {
         rc_team = sObjectMgr.GetPlayerTeamByGUID(rc);
-        if (QueryResult* result = CharacterDatabase.PQuery("SELECT COUNT(*) FROM mail WHERE receiver = '%u'", rc.GetCounter()))
+        if (QueryResult* result = CharacterDatabase.PQuery("SELECT COUNT(*) FROM `mail` WHERE `receiver` = '%u'", rc.GetCounter()))
         {
             Field* fields = result->Fetch();
             mails_count = fields[0].GetUInt32();
@@ -218,9 +231,13 @@ void WorldSession::HandleSendMail(WorldPacket& recv_data)
     {
         uint32 rc_account = 0;
         if (receive)
-            { rc_account = receive->GetSession()->GetAccountId(); }
+        {
+            rc_account = receive->GetSession()->GetAccountId();
+        }
         else
-            { rc_account = sObjectMgr.GetPlayerAccountIdByGUID(rc); }
+        {
+            rc_account = sObjectMgr.GetPlayerAccountIdByGUID(rc);
+        }
 
         if (item)
         {
@@ -235,7 +252,7 @@ void WorldSession::HandleSendMail(WorldPacket& recv_data)
             item->DeleteFromInventoryDB();                  // deletes item from character's inventory
             item->SaveToDB();                               // recursive and not have transaction guard into self, item not in inventory and can be save standalone
             // owner in data will set at mail receive and item extracting
-            CharacterDatabase.PExecute("UPDATE item_instance SET owner_guid = '%u' WHERE guid='%u'", rc.GetCounter(), item->GetGUIDLow());
+            CharacterDatabase.PExecute("UPDATE `item_instance` SET `owner_guid` = '%u' WHERE `guid`='%u'", rc.GetCounter(), item->GetGUIDLow());
             CharacterDatabase.CommitTransaction();
 
             draft.AddItem(item);
@@ -284,14 +301,18 @@ void WorldSession::HandleMailMarkAsRead(WorldPacket& recv_data)
     recv_data >> mailId;
 
     if (!CheckMailBox(mailboxGuid))
-        { return; }
+    {
+        return;
+    }
 
     Player* pl = _player;
 
     if (Mail* m = pl->GetMail(mailId))
     {
         if (pl->unReadMails)
-            { --pl->unReadMails; }
+        {
+            --pl->unReadMails;
+        }
         m->checked = m->checked | MAIL_CHECK_MASK_READ;
         pl->m_mailsUpdated = true;
         m->state = MAIL_STATE_CHANGED;
@@ -314,7 +335,9 @@ void WorldSession::HandleMailDelete(WorldPacket& recv_data)
     recv_data >> mailId;
 
     if (!CheckMailBox(mailboxGuid))
-        { return; }
+    {
+        return;
+    }
 
     Player* pl = _player;
     pl->m_mailsUpdated = true;
@@ -349,7 +372,9 @@ void WorldSession::HandleMailReturnToSender(WorldPacket& recv_data)
     recv_data >> mailId;
 
     if (!CheckMailBox(mailboxGuid))
-        { return; }
+    {
+        return;
+    }
 
     Player* pl = _player;
     Mail* m = pl->GetMail(mailId);
@@ -362,9 +387,9 @@ void WorldSession::HandleMailReturnToSender(WorldPacket& recv_data)
     // we can return mail now
     // so firstly delete the old one
     CharacterDatabase.BeginTransaction();
-    CharacterDatabase.PExecute("DELETE FROM mail WHERE id = '%u'", mailId);
+    CharacterDatabase.PExecute("DELETE FROM `mail` WHERE `id` = '%u'", mailId);
     // needed?
-    CharacterDatabase.PExecute("DELETE FROM mail_items WHERE mail_id = '%u'", mailId);
+    CharacterDatabase.PExecute("DELETE FROM `mail_items` WHERE `mail_id` = '%u'", mailId);
     CharacterDatabase.CommitTransaction();
     pl->RemoveMail(mailId);
 
@@ -373,16 +398,22 @@ void WorldSession::HandleMailReturnToSender(WorldPacket& recv_data)
     {
         MailDraft draft;
         if (m->mailTemplateId)
-            { draft.SetMailTemplate(m->mailTemplateId, false); }// items already included
+        {
+            draft.SetMailTemplate(m->mailTemplateId, false); // items already included
+        }
         else
-            { draft.SetSubjectAndBodyId(m->subject, m->itemTextId); }
+        {
+            draft.SetSubjectAndBodyId(m->subject, m->itemTextId);
+        }
 
         if (m->HasItems())
         {
             for (MailItemInfoVec::iterator itr2 = m->items.begin(); itr2 != m->items.end(); ++itr2)
             {
                 if (Item* item = pl->GetMItem(itr2->item_guid))
-                    { draft.AddItem(item); }
+                {
+                    draft.AddItem(item);
+                }
 
                 pl->RemoveMItem(itr2->item_guid);
             }
@@ -406,7 +437,9 @@ void WorldSession::HandleMailTakeItem(WorldPacket& recv_data)
     recv_data >> mailId;
 
     if (!CheckMailBox(mailboxGuid))
-        { return; }
+    {
+        return;
+    }
 
     Player* pl = _player;
 
@@ -457,13 +490,17 @@ void WorldSession::HandleMailTakeItem(WorldPacket& recv_data)
                     sender_accId = sObjectMgr.GetPlayerAccountIdByGUID(sender_guid);
 
                     if (!sObjectMgr.GetPlayerNameByGUID(sender_guid, sender_name))
-                        { sender_name = sObjectMgr.GetMangosStringForDBCLocale(LANG_UNKNOWN); }
+                    {
+                        sender_name = sObjectMgr.GetMangosStringForDBCLocale(LANG_UNKNOWN);
+                    }
                 }
                 sLog.outCommand(GetAccountId(), "GM %s (Account: %u) receive mail item: %s (Entry: %u Count: %u) and send COD money: %u to player: %s (Account: %u)",
                                 GetPlayerName(), GetAccountId(), it->GetProto()->Name1, it->GetEntry(), it->GetCount(), m->COD, sender_name.c_str(), sender_accId);
             }
             else if (!sender)
-                { sender_accId = sObjectMgr.GetPlayerAccountIdByGUID(sender_guid); }
+            {
+                sender_accId = sObjectMgr.GetPlayerAccountIdByGUID(sender_guid);
+            }
 
             // check player existence
             if (sender || sender_accId)
@@ -485,13 +522,15 @@ void WorldSession::HandleMailTakeItem(WorldPacket& recv_data)
 
         CharacterDatabase.BeginTransaction();
         pl->SaveInventoryAndGoldToDB();
-        pl->_SaveMail();
+        pl->SaveMail();
         CharacterDatabase.CommitTransaction();
 
         pl->SendMailResult(mailId, MAIL_ITEM_TAKEN, MAIL_OK, 0, itemId, count);
     }
     else
-        { pl->SendMailResult(mailId, MAIL_ITEM_TAKEN, MAIL_ERR_EQUIP_ERROR, msg); }
+    {
+        pl->SendMailResult(mailId, MAIL_ITEM_TAKEN, MAIL_ERR_EQUIP_ERROR, msg);
+    }
 }
 /**
  * Handles the packet sent by the client when taking money from the mail.
@@ -504,7 +543,9 @@ void WorldSession::HandleMailTakeMoney(WorldPacket& recv_data)
     recv_data >> mailId;
 
     if (!CheckMailBox(mailboxGuid))
-        { return; }
+    {
+        return;
+    }
 
     Player* pl = _player;
 
@@ -525,7 +566,7 @@ void WorldSession::HandleMailTakeMoney(WorldPacket& recv_data)
     // save money and mail to prevent cheating
     CharacterDatabase.BeginTransaction();
     pl->SaveGoldToDB();
-    pl->_SaveMail();
+    pl->SaveMail();
     CharacterDatabase.CommitTransaction();
 }
 
@@ -539,7 +580,9 @@ void WorldSession::HandleGetMailList(WorldPacket& recv_data)
     recv_data >> mailboxGuid;
 
     if (!CheckMailBox(mailboxGuid))
-        { return; }
+    {
+        return;
+    }
 
     // client can't work with packets > max int16 value
     //const uint32 maxPacketSize = 32767;
@@ -554,17 +597,23 @@ void WorldSession::HandleGetMailList(WorldPacket& recv_data)
     {
         // packet send mail count as uint8, prevent overflow
         if (mailsCount >= 254)
-            { break; }
+        {
+            break;
+        }
 
         // skip deleted or not delivered (deliver delay not expired) mails
         if ((*itr)->state == MAIL_STATE_DELETED || cur_time < (*itr)->deliver_time)
-            { continue; }
+        {
+            continue;
+        }
 
         /*[-ZERO] TODO recheck this
         size_t next_mail_size = 4+1+8+((*itr)->subject.size()+1)+4*7+1+item_count*(1+4+4+6*3*4+4+4+1+4+4+4);
 
         if(data.wpos()+next_mail_size > maxPacketSize)
+        {
             break;
+        }
         */
 
         data << uint32((*itr)->messageID);                  // Message ID
@@ -665,7 +714,9 @@ void WorldSession::HandleMailCreateTextItem(WorldPacket& recv_data)
     recv_data.read_skip<uint32>();                          // mailTemplateId, non need, Mail store own 100% correct value anyway
 
     if (!CheckMailBox(mailboxGuid))
-        { return; }
+    {
+        return;
+    }
 
     Player* pl = _player;
 

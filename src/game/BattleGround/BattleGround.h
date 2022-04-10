@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -92,7 +92,7 @@ enum BattleGroundMarks
     SPELL_AB_MARK_LOSER             = 24952,
     SPELL_AB_MARK_WINNER            = 24953,
     SPELL_AV_MARK_LOSER             = 24954,
-    SPELL_AV_MARK_WINNER            = 24955
+    SPELL_AV_MARK_WINNER            = 24955,
 };
 
 /**
@@ -131,7 +131,7 @@ enum BattleGroundStartTimeIntervals
     BG_START_DELAY_2M               = 120000,               // ms (2 minutes)
     BG_START_DELAY_1M               = 60000,                // ms (1 minute)
     BG_START_DELAY_30S              = 30000,                // ms (30 seconds)
-    BG_START_DELAY_NONE             = 0                     // ms
+    BG_START_DELAY_NONE             = 0,                    // ms
 };
 
 /**
@@ -196,7 +196,7 @@ enum BattleGroundQueueTypeId
     BATTLEGROUND_QUEUE_NONE     = 0,
     BATTLEGROUND_QUEUE_AV       = 1,
     BATTLEGROUND_QUEUE_WS       = 2,
-    BATTLEGROUND_QUEUE_AB       = 3
+    BATTLEGROUND_QUEUE_AB       = 3,
 };
 #define MAX_BATTLEGROUND_QUEUE_TYPES 4
 
@@ -378,7 +378,10 @@ class BattleGround
          *
          * @return BattleGroundTypeId
          */
-        BattleGroundTypeId GetTypeID() const { return m_TypeID; }
+        BattleGroundTypeId GetTypeID() const
+        {
+            return m_TypeID;
+        }
         /**
          * @brief
          *
@@ -615,9 +618,13 @@ class BattleGround
         uint32 GetInvitedCount(Team team) const
         {
             if (team == ALLIANCE)
-                { return m_InvitedAlliance; }
+            {
+                return m_InvitedAlliance;
+            }
             else
-                { return m_InvitedHorde; }
+            {
+                return m_InvitedHorde;
+            }
         }
         /**
          * @brief
@@ -978,9 +985,13 @@ class BattleGround
         void UpdatePlayersCountByTeam(Team team, bool remove)
         {
             if (remove)
-                { --m_PlayersCount[GetTeamIndexByTeamId(team)]; }
+            {
+                --m_PlayersCount[GetTeamIndexByTeamId(team)];
+            }
             else
-                { ++m_PlayersCount[GetTeamIndexByTeamId(team)]; }
+            {
+                ++m_PlayersCount[GetTeamIndexByTeamId(team)];
+            }
         }
 
         /* Triggers handle */
@@ -1128,7 +1139,9 @@ class BattleGround
         bool IsActiveEvent(uint8 event1, uint8 event2)
         {
             if (m_ActiveEvents.find(event1) == m_ActiveEvents.end())
-                { return false; }
+            {
+                return false;
+            }
             return m_ActiveEvents[event1] == event2;
         }
         /**

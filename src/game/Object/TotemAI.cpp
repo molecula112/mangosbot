@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,9 @@ int
 TotemAI::Permissible(const Creature* creature)
 {
     if (creature->IsTotem())
-        { return PERMIT_BASE_PROACTIVE; }
+    {
+        return PERMIT_BASE_PROACTIVE;
+    }
 
     return PERMIT_BASE_NO;
 }
@@ -58,15 +60,21 @@ void
 TotemAI::UpdateAI(const uint32 /*diff*/)
 {
     if (getTotem().GetTotemType() != TOTEM_ACTIVE)
-        { return; }
+    {
+        return;
+    }
 
     if (!m_creature->IsAlive() || m_creature->IsNonMeleeSpellCasted(false))
-        { return; }
+    {
+        return;
+    }
 
     // Search spell
     SpellEntry const* spellInfo = sSpellStore.LookupEntry(getTotem().GetSpell());
     if (!spellInfo)
-        { return; }
+    {
+        return;
+    }
 
     // Get spell rangy
     SpellRangeEntry const* srange = sSpellRangeStore.LookupEntry(spellInfo->rangeIndex);
@@ -100,7 +108,9 @@ TotemAI::UpdateAI(const uint32 /*diff*/)
         m_creature->CastSpell(victim, getTotem().GetSpell(), false);
     }
     else
-        { i_victimGuid.Clear(); }
+    {
+        i_victimGuid.Clear();
+    }
 }
 
 bool

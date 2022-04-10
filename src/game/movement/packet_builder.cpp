@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,12 +41,6 @@ namespace Movement
     void PacketBuilder::WriteCommonMonsterMovePart(const MoveSpline& move_spline, WorldPacket& data)
     {
         MoveSplineFlag splineflags = move_spline.splineflags;
-
-        /*if (mov.IsBoarded())
-        {
-            data.SetOpcode(SMSG_MONSTER_MOVE_TRANSPORT);
-            data << mov.GetTransport()->Owner.GetPackGUID();
-        }*/
 
         data << move_spline.spline.getPoint(move_spline.spline.first());
         data << move_spline.GetId();
@@ -119,45 +113,46 @@ namespace Movement
         if (splineflags & MoveSplineFlag::Mask_CatmullRom)
         {
             if (splineflags.cyclic)
-                { WriteCatmullRomCyclicPath(spline, data); }
+            {
+                WriteCatmullRomCyclicPath(spline, data);
+            }
             else
-                { WriteCatmullRomPath(spline, data); }
+            {
+                WriteCatmullRomPath(spline, data);
+            }
         }
         else
-            { WriteLinearPath(spline, data); }
+        {
+            WriteLinearPath(spline, data);
+        }
     }
 
     void PacketBuilder::WriteCreate(const MoveSpline& move_spline, ByteBuffer& data)
     {
-        // WriteClientStatus(mov,data);
-        // data.append<float>(&mov.m_float_values[SpeedWalk], SpeedMaxCount);
-        // if (mov.SplineEnabled())
+        MoveSplineFlag splineFlags = move_spline.splineflags;
+
+        data << splineFlags.raw();
+
+        if (splineFlags.final_point)
         {
-            MoveSplineFlag splineFlags = move_spline.splineflags;
-
-            data << splineFlags.raw();
-
-            if (splineFlags.final_point)
-            {
-                data << move_spline.facing.f.x << move_spline.facing.f.y << move_spline.facing.f.z;
-            }
-            else if (splineFlags.final_target)
-            {
-                data << move_spline.facing.target;
-            }
-            else if (splineFlags.final_angle)
-            {
-                data << move_spline.facing.angle;
-            }
-
-            data << move_spline.timePassed();
-            data << move_spline.Duration();
-            data << move_spline.GetId();
-
-            uint32 nodes = move_spline.getPath().size();
-            data << nodes;
-            data.append<Vector3>(&move_spline.getPath()[0], nodes);
-            data << (move_spline.isCyclic() ? Vector3::zero() : move_spline.FinalDestination());
+            data << move_spline.facing.f.x << move_spline.facing.f.y << move_spline.facing.f.z;
         }
+        else if (splineFlags.final_target)
+        {
+            data << move_spline.facing.target;
+        }
+        else if (splineFlags.final_angle)
+        {
+            data << move_spline.facing.angle;
+        }
+
+        data << move_spline.timePassed();
+        data << move_spline.Duration();
+        data << move_spline.GetId();
+
+        uint32 nodes = move_spline.getPath().size();
+        data << nodes;
+        data.append<Vector3>(&move_spline.getPath()[0], nodes);
+        data << (move_spline.isCyclic() ? Vector3::zero() : move_spline.FinalDestination());
     }
 }

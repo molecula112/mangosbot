@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  * Copyright (C) 2008-2015 TrinityCore <http://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -36,6 +36,7 @@
 #include "Util.h"
 #include "WardenMac.h"
 #include "WardenModuleMac.h"
+#include "GameTime.h"
 
 WardenMac::WardenMac() : Warden() { }
 
@@ -156,7 +157,9 @@ void WardenMac::HandleHashResult(ByteBuffer &buff)
     {
         sLog.outWarden("%s failed hash reply. Action: %s", _session->GetPlayerName(), Penalty().c_str());
         if (sWorld.getConfig(CONFIG_UINT32_WARDEN_CLIENT_FAIL_ACTION) > uint32(WARDEN_ACTION_LOG))
+        {
             _session->KickPlayer();
+        }
         return;
     }
 
@@ -175,7 +178,7 @@ void WardenMac::HandleHashResult(ByteBuffer &buff)
     _inputCrypto.Init(_inputKey);
     _outputCrypto.Init(_outputKey);
 
-    _previousTimestamp = WorldTimer::getMSTime();
+    _previousTimestamp = GameTime::GetGameTimeMS();
 }
 
 void WardenMac::RequestData()
@@ -254,9 +257,13 @@ void WardenMac::HandleData(ByteBuffer &buff)
     }
 
     if (found && sWorld.getConfig(CONFIG_UINT32_WARDEN_CLIENT_FAIL_ACTION) > uint32(WARDEN_ACTION_LOG))
+    {
         _session->KickPlayer();
+    }
     else
+    {
         sLog.outWarden("SHA1 and MD5 hash verified. Handle data passed.");
+    }
 
     Warden::HandleData(buff);
 }

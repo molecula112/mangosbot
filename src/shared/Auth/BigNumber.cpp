@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,7 +48,10 @@ BigNumber::BigNumber(uint32 val)
 BigNumber::~BigNumber()
 {
     BN_free(_bn);
-    if (_array) { delete[] _array; }
+    if (_array)
+    {
+        delete[] _array;
+    }
 }
 
 void BigNumber::SetDword(uint32 val)
@@ -67,7 +70,9 @@ void BigNumber::SetBinary(const uint8* bytes, int len)
 {
     uint8 t[1000];
     for (int i = 0; i < len; ++i)
-        { t[i] = bytes[len - 1 - i]; }
+    {
+        t[i] = bytes[len - 1 - i];
+    }
     BN_bin2bn(t, len, _bn);
 }
 
@@ -180,7 +185,9 @@ uint8* BigNumber::AsByteArray(int minSize)
 
     // If we need more bytes than length of BigNumber set the rest to 0
     if (length > GetNumBytes())
-        { memset((void*)_array, 0, length); }
+    {
+        memset((void*)_array, 0, length);
+    }
 
     BN_bn2bin(_bn, (unsigned char*)_array);
 
@@ -202,12 +209,16 @@ uint8 *BigNumber::AsByteArray(int minSize, bool reverse)
 
     // If we need more bytes than length of BigNumber set the rest to 0
     if (length > GetNumBytes())
+    {
         memset((void*)_array, 0, length);
+    }
 
     BN_bn2bin(_bn, (unsigned char *)_array);
 
     if (reverse)
+    {
         std::reverse(_array, _array + length);
+    }
 
     return _array;
 }

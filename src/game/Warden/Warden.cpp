@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  * Copyright (C) 2008-2015 TrinityCore <http://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -35,6 +35,7 @@
 #include "Util.h"
 #include "Warden.h"
 #include "AccountMgr.h"
+#include "GameTime.h"
 
 Warden::Warden() : _session(NULL), _inputCrypto(16), _outputCrypto(16), _checkTimer(10000/*10 sec*/), _clientResponseTimer(0),
                    _module(NULL), _state(WardenState::STATE_INITIAL)
@@ -42,7 +43,7 @@ Warden::Warden() : _session(NULL), _inputCrypto(16), _outputCrypto(16), _checkTi
     memset(_inputKey, 0, sizeof(_inputKey));
     memset(_outputKey, 0, sizeof(_outputKey));
     memset(_seed, 0, sizeof(_seed));
-    _previousTimestamp = WorldTimer::getMSTime();
+    _previousTimestamp = GameTime::GetGameTimeMS();
 }
 
 Warden::~Warden()
@@ -128,7 +129,7 @@ void Warden::RequestModule()
 
 void Warden::Update()
 {
-    uint32 currentTimestamp = WorldTimer::getMSTime();
+    uint32 currentTimestamp = GameTime::GetGameTimeMS();
     uint32 diff = currentTimestamp - _previousTimestamp;
     _previousTimestamp = currentTimestamp;
 
@@ -149,7 +150,7 @@ void Warden::Update()
                 if (_clientResponseTimer > maxClientResponseDelay * IN_MILLISECONDS)
                 {
                     sLog.outWarden("%s (latency: %u, IP: %s) exceeded Warden module response delay on state %s for more than %s - disconnecting client",
-                                   _session->GetPlayerName(), _session->GetLatency(), _session->GetRemoteAddress().c_str(), WardenState::to_string(_state), secsToTimeString(maxClientResponseDelay, true).c_str());
+                                   _session->GetPlayerName(), _session->GetLatency(), _session->GetRemoteAddress().c_str(), WardenState::to_string(_state), secsToTimeString(maxClientResponseDelay, TimeFormat::ShortText).c_str());
                     _session->KickPlayer();
                 }
                 else
@@ -248,7 +249,9 @@ uint32 Warden::BuildChecksum(const uint8* data, uint32 length)
     SHA1(data, length, hash.bytes.bytes);
     uint32 checkSum = 0;
     for (uint8 i = 0; i < 5; ++i)
+    {
         checkSum = checkSum ^ hash.ints.ints[i];
+    }
 
     return checkSum;
 }
@@ -258,9 +261,13 @@ std::string Warden::Penalty(WardenCheck* check /*= NULL*/)
     WardenActions action;
 
     if (check)
+    {
         action = check->Action;
+    }
     else
+    {
         action = WardenActions(sWorld.getConfig(CONFIG_UINT32_WARDEN_CLIENT_FAIL_ACTION));
+    }
 
     switch (action)
     {
@@ -280,7 +287,9 @@ std::string Warden::Penalty(WardenCheck* check /*= NULL*/)
             banReason << "Warden Anticheat Violation";
             // Check can be NULL, for example if the client sent a wrong signature in the warden packet (CHECKSUM FAIL)
             if (check)
+            {
                 banReason << ": " << (check->Comment.empty() ? std::string("Undocumented Check") : check->Comment) << " (CheckId: " << check->CheckId << ")";
+            }
 
             sWorld.BanAccount(BAN_ACCOUNT, accountName, sWorld.getConfig(CONFIG_UINT32_WARDEN_CLIENT_BAN_DURATION), banReason.str(), "Warden");
 
@@ -295,7 +304,9 @@ std::string Warden::Penalty(WardenCheck* check /*= NULL*/)
 void WorldSession::HandleWardenDataOpcode(WorldPacket& recvData)
 {
     if (!_warden || recvData.empty())
+    {
         return;
+    }
 
     _warden->DecryptData(const_cast<uint8*>(recvData.contents()), recvData.size());
     uint8 opcode;
@@ -343,14 +354,18 @@ void Warden::HandleData(ByteBuffer& /*buff*/)
 void Warden::LogPositiveToDB(WardenCheck* check)
 {
     if (!check || !_session)
+    {
         return;
+    }
 
     if (uint32(check->Action) < sWorld.getConfig(CONFIG_UINT32_WARDEN_DB_LOGLEVEL))
+    {
         return;
+    }
 
     static SqlStatementID insWardenPositive;
 
-    SqlStatement stmt = LoginDatabase.CreateStatement(insWardenPositive, "INSERT INTO warden_log (`check`, `action`, `account`, `guid`, `map`, `position_x`, `position_y`, `position_z`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    SqlStatement stmt = LoginDatabase.CreateStatement(insWardenPositive, "INSERT INTO `warden_log` (`check`, `action`, `account`, `guid`, `map`, `position_x`, `position_y`, `position_z`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 
     stmt.addUInt16(check->CheckId);
     stmt.addInt8(check->Action);

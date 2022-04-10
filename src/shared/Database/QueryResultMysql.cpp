@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,9 @@ QueryResultMysql::QueryResultMysql(MYSQL_RES* result, MYSQL_FIELD* fields, uint6
     MANGOS_ASSERT(mCurrentRow);
 
     for (uint32 i = 0; i < mFieldCount; ++i)
+    {
         mCurrentRow[i].SetType(fields[i].type);
+    }
 }
 
 QueryResultMysql::~QueryResultMysql()
@@ -47,7 +49,9 @@ bool QueryResultMysql::NextRow()
     MYSQL_ROW row;
 
     if (!mResult)
-        { return false; }
+    {
+        return false;
+    }
 
     row = mysql_fetch_row(mResult);
     if (!row)
@@ -57,7 +61,9 @@ bool QueryResultMysql::NextRow()
     }
 
     for (uint32 i = 0; i < mFieldCount; ++i)
-        { mCurrentRow[i].SetValue(row[i]); }
+    {
+        mCurrentRow[i].SetValue(row[i]);
+    }
 
     return true;
 }

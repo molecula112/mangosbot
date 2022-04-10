@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -81,12 +81,12 @@ static void clear_online_accounts()
 {
     // Cleanup online status for characters hosted at current realm
     /// \todo Only accounts with characters logged on *this* realm should have online status reset. Move the online column from 'account' to 'realmcharacters'?
-    LoginDatabase.PExecute("UPDATE account SET active_realm_id = 0, os = ''  WHERE active_realm_id = '%u'", realmID);
+    LoginDatabase.PExecute("UPDATE `account` SET `active_realm_id` = 0, `os` = ''  WHERE `active_realm_id` = '%u'", realmID);
 
-    CharacterDatabase.Execute("UPDATE characters SET online = 0 WHERE online<>0");
+    CharacterDatabase.Execute("UPDATE `characters` SET `online` = 0 WHERE `online`<>0");
 
     // Battleground instance ids reset at server restart
-    CharacterDatabase.Execute("UPDATE character_battleground_data SET instance_id = 0");
+    CharacterDatabase.Execute("UPDATE `character_battleground_data` SET `instance_id` = 0");
 }
 
 
@@ -305,15 +305,23 @@ int main(int argc, char** argv)
                 const char* mode = cmd_opts.opt_arg();
 
                 if (!strcmp(mode, "run"))
-                    { serviceDaemonMode = 'r'; }
+                {
+                    serviceDaemonMode = 'r';
+                }
 #ifdef WIN32
                 else if (!strcmp(mode, "install"))
-                    { serviceDaemonMode = 'i'; }
+                {
+                    serviceDaemonMode = 'i';
+                }
                 else if (!strcmp(mode, "uninstall"))
-                    { serviceDaemonMode = 'u'; }
+                {
+                    serviceDaemonMode = 'u';
+                }
 #else
                 else if (!strcmp(mode, "stop"))
-                    { serviceDaemonMode = 's'; }
+                {
+                    serviceDaemonMode = 's';
+                }
 #endif
                 else
                 {
@@ -342,11 +350,15 @@ int main(int argc, char** argv)
     {
         case 'i':
             if (WinServiceInstall())
-                { sLog.outString("Installing service"); }
+            {
+                sLog.outString("Installing service");
+            }
             return 1;
         case 'u':
             if (WinServiceUninstall())
-                { sLog.outString("Uninstalling service"); }
+            {
+                sLog.outString("Uninstalling service");
+            }
             return 1;
         case 'r':
             WinServiceRun();
@@ -411,7 +423,7 @@ int main(int argc, char** argv)
     }
 
     ///- Set Realm to Offline, if crash happens. Only used once.
-    LoginDatabase.DirectPExecute("UPDATE realmlist SET realmflags = realmflags | %u WHERE id = '%u'", REALM_FLAG_OFFLINE, realmID);
+    LoginDatabase.DirectPExecute("UPDATE `realmlist` SET `realmflags` = `realmflags` | %u WHERE `id` = '%u'", REALM_FLAG_OFFLINE, realmID);
 
     ///- Initialize the World
     sWorld.SetInitialWorldSettings();
@@ -423,7 +435,7 @@ int main(int argc, char** argv)
     // set realmbuilds depend on mangosd expected builds, and set server online
     std::string builds = AcceptableClientBuildsListStr();
     LoginDatabase.escape_string(builds);
-    LoginDatabase.DirectPExecute("UPDATE realmlist SET realmflags = realmflags & ~(%u), population = 0, realmbuilds = '%s'  WHERE id = '%u'", REALM_FLAG_OFFLINE, builds.c_str(), realmID);
+    LoginDatabase.DirectPExecute("UPDATE `realmlist` SET `realmflags` = `realmflags` & ~(%u), `population` = 0, `realmbuilds` = '%s'  WHERE `id` = '%u'", REALM_FLAG_OFFLINE, builds.c_str(), realmID);
 
     // server loaded successfully => enable async DB requests
     // this is done to forbid any async transactions during server startup!
@@ -466,13 +478,14 @@ int main(int argc, char** argv)
     // 3. Start the SOAP listener thread, if enabled
     //************************************************************************************************************************
 #ifdef ENABLE_SOAP
-    SoapThread* soapThread = NULL;
+    std::shared_ptr<std::thread> soapThread;
     if (sConfig.GetBoolDefault("SOAP.Enabled", false))
     {
-        host = sConfig.GetStringDefault("SOAP.IP", "127.0.0.1");
-        port = sConfig.GetIntDefault("SOAP.Port", 7878);
-        soapThread = new SoapThread(port, host.c_str());
-        soapThread->open(0);
+        soapThread.reset(new std::thread(SoapThread, sConfig.GetStringDefault("SOAP.IP", "127.0.0.1"), uint16(sConfig.GetIntDefault("SOAP.Port", 7878))), [](std::thread* thread)
+        {
+            thread->join();
+            delete thread;
+        });
     }
 #else /* ENABLE_SOAP */
     if (sConfig.GetBoolDefault("SOAP.Enabled", false))
@@ -517,14 +530,14 @@ int main(int argc, char** argv)
 
     ///- Stop freeze protection before shutdown tasks
     if (freezeThread)
+    {
         delete freezeThread;
+    }
 
-#ifdef ENABLE_SOAP
-    if (soapThread)
-        delete soapThread;
-#endif
     if (raThread)
+    {
         delete raThread;
+    }
 
     delete worldThread;
 
@@ -532,7 +545,7 @@ int main(int argc, char** argv)
     unhook_signals();
 
     ///- Set server offline in realmlist
-    LoginDatabase.DirectPExecute("UPDATE realmlist SET realmflags = realmflags | %u WHERE id = '%u'", REALM_FLAG_OFFLINE, realmID);
+    LoginDatabase.DirectPExecute("UPDATE `realmlist` SET `realmflags` = `realmflags` | %u WHERE `id` = '%u'", REALM_FLAG_OFFLINE, realmID);
 
     ///- Clean account database before leaving
     clear_online_accounts();
@@ -545,8 +558,8 @@ int main(int argc, char** argv)
     WorldDatabase.HaltDelayThread();
     LoginDatabase.HaltDelayThread();
 
-    // This is done to make sure that we cleanup our so file before it's 
-    // unloaded automatically, since the ~ScriptMgr() is called to late 
+    // This is done to make sure that we cleanup our so file before it's
+    // unloaded automatically, since the ~ScriptMgr() is called to late
     // as it's allocated with static storage.
     sScriptMgr.UnloadScriptLibrary();
 

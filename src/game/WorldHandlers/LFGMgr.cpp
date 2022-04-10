@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,7 +42,9 @@
 void LFGQueue::AddToQueue(Player* leader, uint32 queAreaID)
 {
     if(!leader)
+    {
         return;
+    }
 
     if (AreaTableEntry const* areaEntry = GetAreaEntryByAreaID(queAreaID))
     {
@@ -87,7 +89,9 @@ void LFGQueue::AddToQueue(Player* leader, uint32 queAreaID)
         leader->GetSession()->SendMeetingstoneSetqueue(queAreaID, MEETINGSTONE_STATUS_JOINED_QUEUE);
     }
     else                                                    // Player is in group, but it's not leader
+    {
         MANGOS_ASSERT(false && "LFGQueue::AddToQueue called while player is not leader and in group.");
+    }
 }
 
 void LFGQueue::RestoreOfflinePlayer(ObjectGuid plrGuid)
@@ -96,7 +100,9 @@ void LFGQueue::RestoreOfflinePlayer(ObjectGuid plrGuid)
 
     // Should not happen, but there's always chance of quick disconnection
     if(!plr)
+    {
         return;
+    }
 
     QueuedPlayersMap::iterator offlinePlr = m_OfflinePlayers.find(plrGuid);
 
@@ -200,7 +206,9 @@ void LFGQueue::UpdateGroup(uint32 groupId)
 void LFGQueue::Update(uint32 diff)
 {
     if(m_QueuedGroups.empty() && m_QueuedPlayers.empty())
+    {
         return;
+    }
 
     // Iterate over QueuedPlayersMap to update players timers and remove offline/disconnected players.
     for(QueuedPlayersMap::iterator qPlayer = m_QueuedPlayers.begin(); qPlayer != m_QueuedPlayers.end(); ++qPlayer)
@@ -233,7 +241,9 @@ void LFGQueue::Update(uint32 diff)
 
             // Safe check
             if(!grp)
+            {
                 return;
+            }
 
             // Remove group from Queue if it's full
             if(grp->IsFull())
@@ -330,7 +340,9 @@ void LFGQueue::Update(uint32 diff)
             for(QueuedPlayersMap::iterator nPlayer2 = m_QueuedPlayers.begin(); nPlayer2 != m_QueuedPlayers.end(); ++nPlayer2)
             {
                 if(nPlayer1->first == nPlayer2->first)
+                {
                     continue;
+                }
 
                 if(nPlayer1->second.team == nPlayer2->second.team &&
                     nPlayer1->second.areaId == nPlayer2->second.areaId)
@@ -342,9 +354,13 @@ void LFGQueue::Update(uint32 diff)
                     if(!newQueueGroup->IsCreated())
                     {
                         if(newQueueGroup->Create(leader->GetObjectGuid(), leader->GetName()))
+                        {
                             sObjectMgr.AddGroup(newQueueGroup);
+                        }
                         else
+                        {
                             return;
+                        }
                     }
 
                     WorldPacket data;
@@ -371,7 +387,9 @@ bool LFGQueue::FindRoleToGroup(Player* plr, Group* grp, ClassRoles role)
 {
     // Safe check
     if(!plr || !grp)
+    {
         return false;
+    }
 
     QueuedGroupsMap::iterator qGroup = m_QueuedGroups.find(grp->GetId());
     QueuedPlayersMap::iterator qPlayer = m_QueuedPlayers.find(plr->GetObjectGuid());
@@ -386,10 +404,14 @@ bool LFGQueue::FindRoleToGroup(Player* plr, Group* grp, ClassRoles role)
             for (QueuedPlayersMap::iterator qPlayer_loop = m_QueuedPlayers.begin(); qPlayer_loop != m_QueuedPlayers.end(); ++qPlayer_loop)
             {
                 if (qPlayer->first == qPlayer_loop->first)
+                {
                     continue;
+                }
 
                 if(qPlayer->second.timeInLFG > qPlayer_loop->second.timeInLFG)
+                {
                     hasBeenLongerInQueue = true;
+                }
             }
 
             if(hasBeenLongerInQueue)
@@ -419,7 +441,9 @@ bool LFGQueue::FindRoleToGroup(Player* plr, Group* grp, ClassRoles role)
 
                             // Remove dps flag if there is enough dps in group.
                             if(qGroup->second.dpsCount >= 3)
+                            {
                                 qGroup->second.availableRoles &= ~LFG_ROLE_DPS;
+                            }
                         }
                         break;
                     }
@@ -453,16 +477,22 @@ bool LFGQueue::FindRoleToGroup(Player* plr, Group* grp, ClassRoles role)
             for (QueuedPlayersMap::iterator qPlayer_loop = m_QueuedPlayers.begin(); qPlayer_loop != m_QueuedPlayers.end(); ++qPlayer_loop)
             {
                 if (qPlayer->first == qPlayer_loop->first)
+                {
                     continue;
+                }
 
                 Player* m_loopMember = sObjectMgr.GetPlayer(qPlayer_loop->first);
 
                 // If there is anyone in group for class with higher priority then ignore current member.
                 if (getPriority((Classes)plr->getClass(), role) < getPriority((Classes)m_loopMember->getClass(), role))
+                {
                     hasFoundPriority = true;
+                }
 
                 if(qPlayer->second.timeInLFG > qPlayer_loop->second.timeInLFG)
+                {
                     hasBeenLongerInQueue = true;
+                }
             }
 
             // If there were no one in group for role with higher priority add this member to group
@@ -493,7 +523,9 @@ bool LFGQueue::FindRoleToGroup(Player* plr, Group* grp, ClassRoles role)
 
                             // Remove dps flag if there is enough dps in group.
                             if(qGroup->second.dpsCount >= 3)
+                            {
                                 qGroup->second.availableRoles &= ~LFG_ROLE_DPS;
+                            }
                         }
                         break;
                     }
@@ -529,7 +561,9 @@ void LFGQueue::RemovePlayerFromQueue(ObjectGuid plrGuid, PlayerLeaveMethod leave
     Player * plr = sObjectMgr.GetPlayer(plrGuid);
 
     if(!plr)
+    {
         return;
+    }
 
     QueuedPlayersMap::iterator qPlayer;
     qPlayer = m_QueuedPlayers.find(plrGuid);
@@ -552,7 +586,9 @@ void LFGQueue::RemoveGroupFromQueue(uint32 groupId, GroupLeaveMethod leaveMethod
     Group* grp = sObjectMgr.GetGroupById(groupId);
 
     if(!grp)
+    {
         return;
+    }
 
     QueuedGroupsMap::iterator qGroup;
     qGroup = m_QueuedGroups.find(groupId);

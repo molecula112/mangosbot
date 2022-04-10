@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -77,7 +77,7 @@ void CreatureLinkingMgr::LoadFromDB()
     // Load `creature_linking_template`
     sLog.outString("> Loading table `creature_linking_template`");
     uint32 count = 0;
-    QueryResult* result = WorldDatabase.Query("SELECT entry, map, master_entry, flag, search_range FROM creature_linking_template");
+    QueryResult* result = WorldDatabase.Query("SELECT `entry`, `map`, `master_entry`, `flag`, `search_range` FROM `creature_linking_template`");
     if (!result)
     {
         BarGoLink bar(1);
@@ -103,7 +103,9 @@ void CreatureLinkingMgr::LoadFromDB()
             tmp.masterDBGuid        = 0;                        // Will be initialized for unique mobs in IsLinkingEntryValid (only for spawning dependend)
 
             if (!IsLinkingEntryValid(entry, &tmp, true))
-                { continue; }
+            {
+                continue;
+            }
 
             ++count;
 
@@ -124,7 +126,7 @@ void CreatureLinkingMgr::LoadFromDB()
     // Load `creature_linking`
     sLog.outString("> Loading table `creature_linking`");
     count = 0;
-    result = WorldDatabase.Query("SELECT guid, master_guid, flag FROM creature_linking");
+    result = WorldDatabase.Query("SELECT `guid`, `master_guid`, `flag` FROM `creature_linking`");
     if (!result)
     {
         BarGoLink bar(1);
@@ -152,7 +154,9 @@ void CreatureLinkingMgr::LoadFromDB()
         tmp.searchRange         = 0;
 
         if (!IsLinkingEntryValid(guid, &tmp, false))
-            { continue; }
+        {
+            continue;
+        }
 
         ++count;
 
@@ -242,7 +246,7 @@ bool CreatureLinkingMgr::IsLinkingEntryValid(uint32 slaveEntry, CreatureLinkingI
         // Check for uniqueness of mob whom is followed, on whom spawning is dependend
         if (pTmp->searchRange == 0 && pTmp->linkingFlag & (FLAG_FOLLOW | FLAG_CANT_SPAWN_IF_BOSS_DEAD | FLAG_CANT_SPAWN_IF_BOSS_ALIVE))
         {
-            QueryResult* result = WorldDatabase.PQuery("SELECT guid FROM creature WHERE id=%u AND map=%u LIMIT 2", pTmp->masterId, pTmp->mapId);
+            QueryResult* result = WorldDatabase.PQuery("SELECT `guid` FROM `creature` WHERE `id`=%u AND `map`=%u LIMIT 2", pTmp->masterId, pTmp->mapId);
             if (!result)
             {
                 sLog.outErrorDb("`creature_linking_template` has FLAG_FOLLOW, but no master, (entry: %u, map: %u, master: %u)", slaveEntry, pTmp->mapId, pTmp->masterId);
@@ -281,15 +285,21 @@ bool CreatureLinkingMgr::IsLinkedEventTrigger(Creature* pCreature) const
 {
     // Entry case
     if (m_eventTriggers.find(pCreature->GetEntry()) != m_eventTriggers.end())
-        { return true; }
+    {
+        return true;
+    }
 
     // Guid case
     if (m_eventGuidTriggers.find(pCreature->GetGUIDLow()) != m_eventGuidTriggers.end())
-        { return true; }
+    {
+        return true;
+    }
 
     // Also return true for npcs that trigger reverse actions, or for followers(needed in respawn)
     if (CreatureLinkingInfo const* pInfo = GetLinkedTriggerInformation(pCreature))
-        { return pInfo->linkingFlag & EVENT_MASK_TRIGGER_TO; }
+    {
+        return pInfo->linkingFlag & EVENT_MASK_TRIGGER_TO;
+    }
 
     return false;
 }
@@ -321,15 +331,19 @@ CreatureLinkingInfo const* CreatureLinkingMgr::GetLinkedTriggerInformation(uint3
 {
     // guid case
     CreatureLinkingMapBounds bounds = m_creatureLinkingGuidMap.equal_range(lowGuid);
-    for (CreatureLinkingMap::const_iterator iter = bounds.first; iter != bounds.second;)
-        { return &(iter->second); }
+    for (CreatureLinkingMap::const_iterator iter = bounds.first; iter != bounds.second; ++iter)
+    {
+        return &(iter->second);
+    }
 
     // entry case
     bounds = m_creatureLinkingMap.equal_range(entry);
     for (CreatureLinkingMap::const_iterator iter = bounds.first; iter != bounds.second; ++iter)
     {
         if (iter->second.mapId == mapId)
-            { return &(iter->second); }
+        {
+            return &(iter->second);
+        }
     }
 
     return NULL;
@@ -340,7 +354,9 @@ void CreatureLinkingHolder::AddSlaveToHolder(Creature* pCreature)
 {
     CreatureLinkingInfo const* pInfo = sCreatureLinkingMgr.GetLinkedTriggerInformation(pCreature);
     if (!pInfo)
-        { return; }
+    {
+        return;
+    }
 
     if (pInfo->mapId == INVALID_MAP_ID)                     // Guid case, store master->slaves for fast access
     {
@@ -394,17 +410,23 @@ void CreatureLinkingHolder::AddSlaveToHolder(Creature* pCreature)
 void CreatureLinkingHolder::AddMasterToHolder(Creature* pCreature)
 {
     if (pCreature->IsPet())
-        { return; }
+    {
+        return;
+    }
 
     // Only add master NPCs (by entry)
     if (!sCreatureLinkingMgr.IsLinkedMaster(pCreature))
-        { return; }
+    {
+        return;
+    }
 
     // Check, if already stored
     BossGuidMapBounds bounds = m_masterGuid.equal_range(pCreature->GetEntry());
     for (BossGuidMap::const_iterator itr = bounds.first; itr != bounds.second; ++itr)
         if (itr->second == pCreature->GetObjectGuid())
-            { return; }                                         // Already added
+        {
+            return;                                          // Already added
+        }
 
     m_masterGuid.insert(BossGuidMap::value_type(pCreature->GetEntry(), pCreature->GetObjectGuid()));
 }
@@ -414,14 +436,20 @@ void CreatureLinkingHolder::DoCreatureLinkingEvent(CreatureLinkingEvent eventTyp
 {
     // This check will be needed in reload case
     if (!sCreatureLinkingMgr.IsLinkedEventTrigger(pSource))
-        { return; }
+    {
+        return;
+    }
 
     // Ignore atypic behaviour
     if (pSource->IsControlledByPlayer())
-        { return; }
+    {
+        return;
+    }
 
     if (eventType == LINKING_EVENT_AGGRO && !pEnemy)
-        { return; }
+    {
+        return;
+    }
 
     uint32 eventFlagFilter = 0;
     uint32 reverseEventFlagFilter = 0;
@@ -438,12 +466,16 @@ void CreatureLinkingHolder::DoCreatureLinkingEvent(CreatureLinkingEvent eventTyp
     // Process Slaves (by entry)
     HolderMapBounds bounds = m_holderMap.equal_range(pSource->GetEntry());
     for (HolderMap::iterator itr = bounds.first; itr != bounds.second; ++itr)
-        { ProcessSlaveGuidList(eventType, pSource, itr->second.linkingFlag & eventFlagFilter, itr->second.searchRange, itr->second.linkedGuids, pEnemy); }
+    {
+        ProcessSlaveGuidList(eventType, pSource, itr->second.linkingFlag & eventFlagFilter, itr->second.searchRange, itr->second.linkedGuids, pEnemy);
+    }
 
     // Process Slaves (by guid)
     bounds = m_holderGuidMap.equal_range(pSource->GetGUIDLow());
     for (HolderMap::iterator itr = bounds.first; itr != bounds.second; ++itr)
-        { ProcessSlaveGuidList(eventType, pSource, itr->second.linkingFlag & eventFlagFilter, itr->second.searchRange, itr->second.linkedGuids, pEnemy); }
+    {
+        ProcessSlaveGuidList(eventType, pSource, itr->second.linkingFlag & eventFlagFilter, itr->second.searchRange, itr->second.linkedGuids, pEnemy);
+    }
 
     // Process Master
     if (CreatureLinkingInfo const* pInfo = sCreatureLinkingMgr.GetLinkedTriggerInformation(pSource))
@@ -458,7 +490,9 @@ void CreatureLinkingHolder::DoCreatureLinkingEvent(CreatureLinkingEvent eventTyp
                 {
                     pMaster = pSource->GetMap()->GetCreature(itr->second);
                     if (pMaster && IsSlaveInRangeOfBoss(pSource, pMaster, pInfo->searchRange))
-                        { break; }
+                    {
+                        break;
+                    }
                 }
             }
             else                                            // guid case
@@ -474,20 +508,30 @@ void CreatureLinkingHolder::DoCreatureLinkingEvent(CreatureLinkingEvent eventTyp
                 {
                     case LINKING_EVENT_AGGRO:
                         if (pMaster->IsControlledByPlayer())
-                            { return; }
+                        {
+                            return;
+                        }
 
                         if (pMaster->IsInCombat())
-                            { pMaster->SetInCombatWith(pEnemy); }
+                        {
+                            pMaster->SetInCombatWith(pEnemy);
+                        }
                         else
-                            { pMaster->AI()->AttackStart(pEnemy); }
+                        {
+                            pMaster->AI()->AttackStart(pEnemy);
+                        }
                         break;
                     case LINKING_EVENT_EVADE:
                         if (!pMaster->IsAlive())
-                            { pMaster->Respawn(); }
+                        {
+                            pMaster->Respawn();
+                        }
                         break;
                     case LINKING_EVENT_RESPAWN:
                         if (pMaster->IsAlive())
-                            { SetFollowing(pSource, pMaster); }
+                        {
+                            SetFollowing(pSource, pMaster);
+                        }
                         break;
                     case LINKING_EVENT_DIE:                 // Nothing linked for this case
                     case LINKING_EVENT_DESPAWN:             // Nothing linked for this case
@@ -502,7 +546,9 @@ void CreatureLinkingHolder::DoCreatureLinkingEvent(CreatureLinkingEvent eventTyp
 void CreatureLinkingHolder::ProcessSlaveGuidList(CreatureLinkingEvent eventType, Creature* pSource, uint32 flag, uint16 searchRange, GuidList& slaveGuidList, Unit* pEnemy)
 {
     if (!flag)
-        { return; }
+    {
+        return;
+    }
 
     for (GuidList::iterator slave_itr = slaveGuidList.begin(); slave_itr != slaveGuidList.end();)
     {
@@ -518,11 +564,15 @@ void CreatureLinkingHolder::ProcessSlaveGuidList(CreatureLinkingEvent eventType,
 
         // Ignore Pets
         if (pSlave->IsPet())
-            { continue; }
+        {
+            continue;
+        }
 
         // Handle single slave
         if (IsSlaveInRangeOfBoss(pSlave, pSource, searchRange))
-            { ProcessSlave(eventType, pSource, flag, pSlave, pEnemy); }
+        {
+            ProcessSlave(eventType, pSource, flag, pSlave, pEnemy);
+        }
     }
 }
 
@@ -535,45 +585,69 @@ void CreatureLinkingHolder::ProcessSlave(CreatureLinkingEvent eventType, Creatur
             if (flag & FLAG_AGGRO_ON_AGGRO)
             {
                 if (pSlave->IsControlledByPlayer())
-                    { return; }
+                {
+                    return;
+                }
 
                 if (pSlave->IsInCombat())
-                    { pSlave->SetInCombatWith(pEnemy); }
+                {
+                    pSlave->SetInCombatWith(pEnemy);
+                }
                 else
-                    { pSlave->AI()->AttackStart(pEnemy); }
+                {
+                    pSlave->AI()->AttackStart(pEnemy);
+                }
             }
             break;
         case LINKING_EVENT_EVADE:
             if (flag & FLAG_DESPAWN_ON_EVADE && pSlave->IsAlive())
-                { pSlave->ForcedDespawn(); }
+            {
+                pSlave->ForcedDespawn();
+            }
             if (flag & FLAG_RESPAWN_ON_EVADE && !pSlave->IsAlive())
-                { pSlave->Respawn(); }
+            {
+                pSlave->Respawn();
+            }
             break;
         case LINKING_EVENT_DIE:
             if (flag & FLAG_SELFKILL_ON_DEATH && pSlave->IsAlive())
-                { pSlave->DealDamage(pSlave, pSlave->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false); }
+            {
+                pSlave->DealDamage(pSlave, pSlave->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+            }
             if (flag & FLAG_DESPAWN_ON_DEATH && pSlave->IsAlive())
-                { pSlave->ForcedDespawn(); }
+            {
+                pSlave->ForcedDespawn();
+            }
             if (flag & FLAG_RESPAWN_ON_DEATH && !pSlave->IsAlive())
-                { pSlave->Respawn(); }
+            {
+                pSlave->Respawn();
+            }
             break;
         case LINKING_EVENT_RESPAWN:
             if (flag & FLAG_RESPAWN_ON_RESPAWN)
             {
                 // Additional check to prevent endless loops (in case whole group respawns on first respawn)
                 if (!pSlave->IsAlive() && pSlave->GetRespawnTime() > time(NULL))
-                    { pSlave->Respawn(); }
+                {
+                    pSlave->Respawn();
+                }
             }
             else if (flag & FLAG_DESPAWN_ON_RESPAWN && pSlave->IsAlive())
-                { pSlave->ForcedDespawn(); }
+            {
+                pSlave->ForcedDespawn();
+            }
 
             if (flag & FLAG_FOLLOW && pSlave->IsAlive() && !pSlave->IsInCombat())
-                { SetFollowing(pSlave, pSource); }
+            {
+                SetFollowing(pSlave, pSource);
+            }
 
             break;
         case LINKING_EVENT_DESPAWN:
             if (flag & FLAG_DESPAWN_ON_DESPAWN && !pSlave->IsDespawned())
+            {
                 pSlave->ForcedDespawn();
+            }
 
             break;
     }
@@ -597,7 +671,9 @@ void CreatureLinkingHolder::SetFollowing(Creature* pWho, Creature* pWhom)
     // Atm this means we have to subtract the bounding radiuses
     dist = dist - pWho->GetObjectBoundingRadius() - pWhom->GetObjectBoundingRadius();
     if (dist < 0.0f)
-        { dist = 0.0f; }
+    {
+        dist = 0.0f;
+    }
 
     // Need to pass the relative angle to following
     float angle = atan2(dy, dx) - mO;
@@ -616,7 +692,9 @@ bool CreatureLinkingHolder::IsSlaveInRangeOfBoss(Creature const* pSlave, Creatur
 bool CreatureLinkingHolder::IsSlaveInRangeOfBoss(Creature const* pBoss, float sX, float sY, uint16 searchRange) const
 {
     if (!searchRange)
-        { return true; }
+    {
+        return true;
+    }
 
     // Do some calculations
     float mX, mY, mZ, dx, dy;
@@ -640,7 +718,9 @@ bool CreatureLinkingHolder::CanSpawn(Creature* pCreature) const
 {
     CreatureLinkingInfo const*  pInfo = sCreatureLinkingMgr.GetLinkedTriggerInformation(pCreature);
     if (!pInfo)
-        { return true; }
+    {
+        return true;
+    }
 
     float sx, sy, sz;
     pCreature->GetRespawnCoord(sx, sy, sz);
@@ -663,13 +743,19 @@ bool CreatureLinkingHolder::CanSpawn(uint32 lowGuid, Map* _map, CreatureLinkingI
     {
         CreatureData const* data = sObjectMgr.GetCreatureData(lowGuid);
         if (!data)
+        {
             return true;
+        }
         pInfo = sCreatureLinkingMgr.GetLinkedTriggerInformation(data->id, lowGuid, data->mapid);
         if (!pInfo)
+        {
             return true;
+        }
         // Has lowGuid npc actually spawning linked?
         if (!sCreatureLinkingMgr.IsSpawnedByLinkedMob(pInfo))
+        {
             return true;
+        }
 
         sx = data->posX;                                    // Fill position data
         sy = data->posY;
@@ -678,14 +764,22 @@ bool CreatureLinkingHolder::CanSpawn(uint32 lowGuid, Map* _map, CreatureLinkingI
     if (pInfo->searchRange == 0)                            // Map wide case
     {
         if (!pInfo->masterDBGuid)
-            { return false; }                                   // This should never happen
+        {
+            return false;                                    // This should never happen
+        }
 
         if (pInfo->linkingFlag & FLAG_CANT_SPAWN_IF_BOSS_DEAD)
-            { return IsRespawnReady(pInfo->masterDBGuid, _map); }
+        {
+            return IsRespawnReady(pInfo->masterDBGuid, _map);
+        }
         else if (pInfo->linkingFlag & FLAG_CANT_SPAWN_IF_BOSS_ALIVE)
-            { return !IsRespawnReady(pInfo->masterDBGuid, _map); }
+        {
+            return !IsRespawnReady(pInfo->masterDBGuid, _map);
+        }
         else
-            { return true; }
+        {
+            return true;
+        }
     }
 
     // Search for nearby master
@@ -696,11 +790,17 @@ bool CreatureLinkingHolder::CanSpawn(uint32 lowGuid, Map* _map, CreatureLinkingI
         if (pMaster && IsSlaveInRangeOfBoss(pMaster, sx, sy, pInfo->searchRange))
         {
             if (pInfo->linkingFlag & FLAG_CANT_SPAWN_IF_BOSS_DEAD)
-                { return pMaster->IsAlive(); }
+            {
+                return pMaster->IsAlive();
+            }
             else if (pInfo->linkingFlag & FLAG_CANT_SPAWN_IF_BOSS_ALIVE)
-                { return !pMaster->IsAlive(); }
+            {
+                return !pMaster->IsAlive();
+            }
             else
-                { return true; }
+            {
+                return true;
+            }
         }
     }
 
@@ -712,7 +812,9 @@ bool CreatureLinkingHolder::TryFollowMaster(Creature* pCreature)
 {
     CreatureLinkingInfo const*  pInfo = sCreatureLinkingMgr.GetLinkedTriggerInformation(pCreature);
     if (!pInfo || !(pInfo->linkingFlag & FLAG_FOLLOW))
-        { return false; }
+    {
+        return false;
+    }
 
     Creature* pMaster = NULL;
     if (pInfo->mapId != INVALID_MAP_ID)                     // entry case
@@ -722,7 +824,9 @@ bool CreatureLinkingHolder::TryFollowMaster(Creature* pCreature)
         {
             pMaster = pCreature->GetMap()->GetCreature(itr->second);
             if (pMaster && IsSlaveInRangeOfBoss(pCreature, pMaster, pInfo->searchRange))
-                { break; }
+            {
+                break;
+            }
         }
     }
     else                                                    // guid case

@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -82,19 +82,25 @@ void EventProcessor::KillAllEvents(bool force)
             delete i_old->second;
 
             if (!force)                                     // need per-element cleanup
-                { m_events.erase(i_old); }
+            {
+                m_events.erase(i_old);
+            }
         }
     }
 
     // fast clear event list (in force case)
     if (force)
-        { m_events.clear(); }
+    {
+        m_events.clear();
+    }
 }
 
 void EventProcessor::AddEvent(BasicEvent* Event, uint64 e_time, bool set_addtime)
 {
     if (set_addtime)
-        { Event->m_addTime = m_time; }
+    {
+        Event->m_addTime = m_time;
+    }
 
     Event->m_execTime = e_time;
     m_events.insert(std::pair<uint64, BasicEvent*>(e_time, Event));

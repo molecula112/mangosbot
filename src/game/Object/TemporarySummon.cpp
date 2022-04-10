@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
 #include "CreatureAI.h"
 
 TemporarySummon::TemporarySummon(ObjectGuid summoner) :
-    Creature(CREATURE_SUBTYPE_TEMPORARY_SUMMON), m_type(TEMPSUMMON_TIMED_OOC_OR_CORPSE_DESPAWN), m_timer(0), m_lifetime(0), m_summoner(summoner)
+    Creature(CREATURE_SUBTYPE_TEMPORARY_SUMMON), m_type(TEMPSPAWN_TIMED_OOC_OR_CORPSE_DESPAWN), m_timer(0), m_lifetime(0), m_summoner(summoner)
 {
 }
 
@@ -35,9 +35,9 @@ void TemporarySummon::Update(uint32 update_diff,  uint32 diff)
 {
     switch (m_type)
     {
-        case TEMPSUMMON_MANUAL_DESPAWN:
+        case TEMPSPAWN_MANUAL_DESPAWN:
             break;
-        case TEMPSUMMON_TIMED_DESPAWN:
+        case TEMPSPAWN_TIMED_DESPAWN:
         {
             if (m_timer <= update_diff)
             {
@@ -48,7 +48,7 @@ void TemporarySummon::Update(uint32 update_diff,  uint32 diff)
             m_timer -= update_diff;
             break;
         }
-        case TEMPSUMMON_TIMED_OOC_DESPAWN:
+        case TEMPSPAWN_TIMED_OOC_DESPAWN:
         {
             if (!IsInCombat())
             {
@@ -61,12 +61,14 @@ void TemporarySummon::Update(uint32 update_diff,  uint32 diff)
                 m_timer -= update_diff;
             }
             else if (m_timer != m_lifetime)
-                { m_timer = m_lifetime; }
+            {
+                m_timer = m_lifetime;
+            }
 
             break;
         }
 
-        case TEMPSUMMON_CORPSE_TIMED_DESPAWN:
+        case TEMPSPAWN_CORPSE_TIMED_DESPAWN:
         {
             if (IsCorpse())
             {
@@ -85,7 +87,7 @@ void TemporarySummon::Update(uint32 update_diff,  uint32 diff)
             }
             break;
         }
-        case TEMPSUMMON_CORPSE_DESPAWN:
+        case TEMPSPAWN_CORPSE_DESPAWN:
         {
             // if m_deathState is DEAD, CORPSE was skipped
             if (IsDead())
@@ -96,7 +98,7 @@ void TemporarySummon::Update(uint32 update_diff,  uint32 diff)
 
             break;
         }
-        case TEMPSUMMON_DEAD_DESPAWN:
+        case TEMPSPAWN_DEAD_DESPAWN:
         {
             if (IsDespawned())
             {
@@ -105,7 +107,7 @@ void TemporarySummon::Update(uint32 update_diff,  uint32 diff)
             }
             break;
         }
-        case TEMPSUMMON_TIMED_OOC_OR_CORPSE_DESPAWN:
+        case TEMPSPAWN_TIMED_OOC_OR_CORPSE_DESPAWN:
         {
             // if m_deathState is DEAD, CORPSE was skipped
             if (IsDead())
@@ -122,13 +124,17 @@ void TemporarySummon::Update(uint32 update_diff,  uint32 diff)
                     return;
                 }
                 else
-                    { m_timer -= update_diff; }
+                {
+                    m_timer -= update_diff;
+                }
             }
             else if (m_timer != m_lifetime)
-                { m_timer = m_lifetime; }
+            {
+                m_timer = m_lifetime;
+            }
             break;
         }
-        case TEMPSUMMON_TIMED_OOC_OR_DEAD_DESPAWN:
+        case TEMPSPAWN_TIMED_OOC_OR_DEAD_DESPAWN:
         {
             // if m_deathState is DEAD, CORPSE was skipped
             if (IsDespawned())
@@ -145,13 +151,17 @@ void TemporarySummon::Update(uint32 update_diff,  uint32 diff)
                     return;
                 }
                 else
-                    { m_timer -= update_diff; }
+                {
+                    m_timer -= update_diff;
+                }
             }
             else if (m_timer != m_lifetime)
-                { m_timer = m_lifetime; }
+            {
+                m_timer = m_lifetime;
+            }
             break;
         }
-        case TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN:
+        case TEMPSPAWN_TIMED_OR_CORPSE_DESPAWN:
         {
             // if m_deathState is DEAD, CORPSE was skipped
             if (IsDead())
@@ -167,7 +177,7 @@ void TemporarySummon::Update(uint32 update_diff,  uint32 diff)
             m_timer -= update_diff;
             break;
         }
-        case TEMPSUMMON_TIMED_OR_DEAD_DESPAWN:
+        case TEMPSPAWN_TIMED_OR_DEAD_DESPAWN:
         {
             // if m_deathState is DEAD, CORPSE was skipped
             if (IsDespawned())
@@ -204,7 +214,7 @@ void TemporarySummon::Update(uint32 update_diff,  uint32 diff)
     Creature::Update(update_diff, diff);
 }
 
-void TemporarySummon::Summon(TempSummonType type, uint32 lifetime)
+void TemporarySummon::Summon(TempSpawnType type, uint32 lifetime)
 {
     m_type = type;
     m_timer = lifetime;
@@ -219,7 +229,9 @@ void TemporarySummon::UnSummon()
     if (GetSummonerGuid().IsCreature())
         if (Creature* sum = GetMap()->GetCreature(GetSummonerGuid()))
             if (sum->AI())
-                { sum->AI()->SummonedCreatureDespawn(this); }
+            {
+                sum->AI()->SummonedCreatureDespawn(this);
+            }
 
     AddObjectToRemoveList();
 }

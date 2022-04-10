@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -194,11 +194,14 @@ inline ByteBuffer& operator>> (ByteBuffer& buf, SpellCastTargetsReader const& ta
 
 enum SpellState
 {
-    SPELL_STATE_CREATED =   0,                              // just created
-    SPELL_STATE_PREPARING = 1,                              // cast time delay period, non channeled spell
-    SPELL_STATE_CASTING   = 2,                              // channeled time period spell casting state
-    SPELL_STATE_FINISHED  = 3,                              // cast finished to success or fail
-    SPELL_STATE_DELAYED   = 4                               // spell casted but need time to hit target(s)
+    SPELL_STATE_CREATED     = 0,   // just created
+    SPELL_STATE_PREPARING   = 1,   // cast time delay period, non channeled spell
+    SPELL_STATE_CASTING     = 2,   // channeled time period spell casting state
+    SPELL_STATE_DELAYED     = 3,   // spell is delayed (cast time pushed back) TODO: need to be implemented properly
+    SPELL_STATE_TRAVELING   = 4,   // spell casted but need time to hit target(s)
+    SPELL_STATE_LANDING     = 5,   // processing the effects
+    SPELL_STATE_CHANNELING  = 6,   // channeled time period spell casting state
+    SPELL_STATE_FINISHED    = 7,   // cast finished to success or fail
 };
 
 enum SpellTargets
@@ -236,6 +239,7 @@ class Spell
         void EffectPowerDrain(SpellEffectIndex eff_idx);
         void EffectHeal(SpellEffectIndex eff_idx);
         void EffectBind(SpellEffectIndex eff_idx);
+        void EffectTeleportGraveyard(SpellEffectIndex eff_idx);
         void EffectHealthLeech(SpellEffectIndex eff_idx);
         void EffectQuestComplete(SpellEffectIndex eff_idx);
         void EffectCreateItem(SpellEffectIndex eff_idx);
@@ -316,7 +320,7 @@ class Spell
         Spell(Unit* caster, SpellEntry const* info, bool triggered, ObjectGuid originalCasterGUID = ObjectGuid(), SpellEntry const* triggeredBy = NULL);
         ~Spell();
 
-        void prepare(SpellCastTargets const* targets, Aura* triggeredByAura = NULL);
+        SpellCastResult prepare(SpellCastTargets const* targets, Aura* triggeredByAura = NULL, uint32 chance = 0);
 
         void cancel();
 
@@ -382,6 +386,8 @@ class Spell
         int32 m_currentBasePoints[MAX_EFFECT_INDEX];        // cache SpellEntry::CalculateSimpleValue and use for set custom base points
         Item* m_CastItem;
         SpellCastTargets m_targets;
+
+        bool IsTriggered() const {return m_IsTriggeredSpell;}
 
         int32 GetCastTime() const { return m_casttime; }
         uint32 GetCastedTime() { return m_timer; }
@@ -629,19 +635,27 @@ namespace MaNGOS
         void Visit(PlayerMapType& m)
         {
             if (!i_originalCaster)
-                { return; }
+            {
+                return;
+            }
 
             for (PlayerMapType::iterator itr = m.begin(); itr != m.end(); ++itr)
             {
                 Player* pPlayer = itr->getSource();
                 if (!pPlayer->IsAlive() || pPlayer->IsTaxiFlying())
-                    { continue; }
+                {
+                    continue;
+                }
 
                 if (i_originalCaster->IsFriendlyTo(pPlayer))
-                    { continue; }
+                {
+                    continue;
+                }
 
                 if (pPlayer->IsWithinDist3d(i_spell.m_targets.m_destX, i_spell.m_targets.m_destY, i_spell.m_targets.m_destZ, i_radius))
-                    { i_data.push_back(pPlayer); }
+                {
+                    i_data.push_back(pPlayer);
+                }
             }
         }
         template<class SKIP> void Visit(GridRefManager<SKIP>&) {}
@@ -670,7 +684,9 @@ namespace MaNGOS
               i_originalCaster(originalCaster), i_castingObject(i_spell.GetCastingObject())
         {
             if (!i_originalCaster)
-                { i_originalCaster = i_spell.GetAffectiveCasterObject(); }
+            {
+                i_originalCaster = i_spell.GetAffectiveCasterObject();
+            }
             i_playerControlled = i_originalCaster  ? i_originalCaster->IsControlledByPlayer() : false;
 
             switch (i_push_type)
@@ -688,9 +704,13 @@ namespace MaNGOS
                     break;
                 case PUSH_DEST_CENTER:
                     if (i_spell.m_targets.m_targetMask & TARGET_FLAG_SOURCE_LOCATION)
-                        { i_spell.m_targets.getSource(i_centerX, i_centerY, i_centerZ); }
+                    {
+                        i_spell.m_targets.getSource(i_centerX, i_centerY, i_centerZ);
+                    }
                     else
-                        { i_spell.m_targets.getDestination(i_centerX, i_centerY, i_centerZ); }
+                    {
+                        i_spell.m_targets.getDestination(i_centerX, i_centerY, i_centerZ);
+                    }
                     break;
                 case PUSH_TARGET_CENTER:
                     if (Unit* target = i_spell.m_targets.getUnitTarget())
@@ -709,7 +729,9 @@ namespace MaNGOS
             MANGOS_ASSERT(i_data);
 
             if (!i_originalCaster || !i_castingObject)
-                { return; }
+            {
+                return;
+            }
 
             for (typename GridRefManager<T>::iterator itr = m.begin(); itr != m.end(); ++itr)
             {
@@ -717,46 +739,62 @@ namespace MaNGOS
                 bool gmSpell = (i_spell.m_spellInfo->Id == 1509);
                 // there are still more spells which can be casted on dead, but
                 // they are no AOE and don't have such a nice SPELL_ATTR flag
-                
+
                 if (!gmSpell)
                 {
                     if ((i_TargetType != SPELL_TARGETS_ALL && !itr->getSource()->IsTargetableForAttack(i_spell.m_spellInfo->HasAttribute(SPELL_ATTR_EX3_CAST_ON_DEAD)))
                         // mostly phase check
                         || !itr->getSource()->IsInMap(i_originalCaster))
-                        { continue; }
+                        {
+                            continue;
+                        }
 
                     switch (i_TargetType)
                     {
                         case SPELL_TARGETS_HOSTILE:
                             if (!i_originalCaster->IsHostileTo(itr->getSource()))
-                                { continue; }
+                            {
+                                continue;
+                            }
                             break;
                         case SPELL_TARGETS_NOT_FRIENDLY:
                             if (i_originalCaster->IsFriendlyTo(itr->getSource()))
-                                { continue; }
+                            {
+                                continue;
+                            }
                             break;
                         case SPELL_TARGETS_NOT_HOSTILE:
                             if (i_originalCaster->IsHostileTo(itr->getSource()))
-                                { continue; }
+                            {
+                                continue;
+                            }
                             break;
                         case SPELL_TARGETS_FRIENDLY:
                             if (!i_originalCaster->IsFriendlyTo(itr->getSource()))
-                                { continue; }
+                            {
+                                continue;
+                            }
                             break;
                         case SPELL_TARGETS_AOE_DAMAGE:
                         {
                             if (itr->getSource()->GetTypeId() == TYPEID_UNIT && ((Creature*)itr->getSource())->IsTotem())
-                                { continue; }
+                            {
+                                continue;
+                            }
 
                             if (i_playerControlled)
                             {
                                 if (i_originalCaster->IsFriendlyTo(itr->getSource()))
-                                    { continue; }
+                                {
+                                    continue;
+                                }
                             }
                             else
                             {
                                 if (!i_originalCaster->IsHostileTo(itr->getSource()))
-                                    { continue; }
+                                {
+                                    continue;
+                                }
                             }
                         }
                         break;
@@ -771,31 +809,45 @@ namespace MaNGOS
                 {
                     case PUSH_IN_FRONT:
                         if (i_castingObject->IsInFront((Unit*)(itr->getSource()), i_radius, 2 * M_PI_F / 3))
-                            { i_data->push_back(itr->getSource()); }
+                        {
+                            i_data->push_back(itr->getSource());
+                        }
                         break;
                     case PUSH_IN_FRONT_90:
                         if (i_castingObject->IsInFront((Unit*)(itr->getSource()), i_radius, M_PI_F / 2))
-                            { i_data->push_back(itr->getSource()); }
+                        {
+                            i_data->push_back(itr->getSource());
+                        }
                         break;
                     case PUSH_IN_FRONT_15:
                         if (i_castingObject->IsInFront((Unit*)(itr->getSource()), i_radius, M_PI_F / 12))
-                            { i_data->push_back(itr->getSource()); }
+                        {
+                            i_data->push_back(itr->getSource());
+                        }
                         break;
                     case PUSH_IN_BACK:
                         if (i_castingObject->IsInBack((Unit*)(itr->getSource()), i_radius, 2 * M_PI_F / 3))
-                            { i_data->push_back(itr->getSource()); }
+                        {
+                            i_data->push_back(itr->getSource());
+                        }
                         break;
                     case PUSH_SELF_CENTER:
                         if (i_castingObject->IsWithinDist((Unit*)(itr->getSource()), i_radius))
-                            { i_data->push_back(itr->getSource()); }
+                        {
+                            i_data->push_back(itr->getSource());
+                        }
                         break;
                     case PUSH_DEST_CENTER:
                         if (itr->getSource()->IsWithinDist3d(i_centerX, i_centerY, i_centerZ, i_radius))
-                            { i_data->push_back(itr->getSource()); }
+                        {
+                            i_data->push_back(itr->getSource());
+                        }
                         break;
                     case PUSH_TARGET_CENTER:
                         if (i_spell.m_targets.getUnitTarget() && i_spell.m_targets.getUnitTarget()->IsWithinDist((Unit*)(itr->getSource()), i_radius))
-                            { i_data->push_back(itr->getSource()); }
+                        {
+                            i_data->push_back(itr->getSource());
+                        }
                         break;
                 }
             }

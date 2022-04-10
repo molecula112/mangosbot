@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -171,7 +171,6 @@ class BattleGroundQueue
          * @param bgTypeId
          * @param bracketId
          * @param isPremade
-         * @return GroupQueueInfo
          */
         GroupQueueInfo* AddGroup(Player* leader, Group* group, BattleGroundTypeId bgTypeId, BattleGroundBracketId bracketId, bool isPremade);
         /**
@@ -319,8 +318,7 @@ class BGQueueInviteEvent : public BasicEvent
          */
         BGQueueInviteEvent(ObjectGuid pl_guid, uint32 BgInstanceGUID, BattleGroundTypeId BgTypeId, uint32 removeTime) :
             m_PlayerGuid(pl_guid), m_BgInstanceGUID(BgInstanceGUID), m_BgTypeId(BgTypeId), m_RemoveTime(removeTime)
-        {
-        };
+        {};
         /**
          * @brief
          *
@@ -540,6 +538,7 @@ class BattleGroundMgr
          * @param Team2StartLocY
          * @param Team2StartLocZ
          * @param Team2StartLocO
+         * @param StartMaxDist
          * @return uint32
          */
         uint32 CreateBattleGround(BattleGroundTypeId bgTypeId, uint32 MinPlayersPerTeam, uint32 MaxPlayersPerTeam, uint32 LevelMin, uint32 LevelMax, char const* BattleGroundName, uint32 MapID, float Team1StartLocX, float Team1StartLocY, float Team1StartLocZ, float Team1StartLocO, float Team2StartLocX, float Team2StartLocY, float Team2StartLocZ, float Team2StartLocO, float StartMaxDist);
@@ -641,7 +640,9 @@ class BattleGroundMgr
         {
             BattleMastersMap::const_iterator itr = mBattleMastersMap.find(entry);
             if (itr != mBattleMastersMap.end())
-                { return itr->second; }
+            {
+                return itr->second;
+            }
             return BATTLEGROUND_TYPE_NONE;
         }
 
@@ -660,7 +661,9 @@ class BattleGroundMgr
         {
             CreatureBattleEventIndexesMap::const_iterator itr = m_CreatureBattleEventIndexMap.find(dbTableGuidLow);
             if (itr != m_CreatureBattleEventIndexMap.end())
-                { return itr->second; }
+            {
+                return itr->second;
+            }
             return m_CreatureBattleEventIndexMap.find(-1)->second;
         }
         /**
@@ -673,7 +676,9 @@ class BattleGroundMgr
         {
             GameObjectBattleEventIndexesMap::const_iterator itr = m_GameObjectBattleEventIndexMap.find(dbTableGuidLow);
             if (itr != m_GameObjectBattleEventIndexMap.end())
-                { return itr->second; }
+            {
+                return itr->second;
+            }
             return m_GameObjectBattleEventIndexMap.find(-1)->second;
         }
 

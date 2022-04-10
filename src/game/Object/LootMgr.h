@@ -2,7 +2,7 @@
  * MaNGOS is a full featured server for World of Warcraft, supporting
  * the following clients: 1.12.x, 2.4.3, 3.3.5a, 4.3.4a and 5.4.8
  *
- * Copyright (C) 2005-2019  MaNGOS project <https://getmangos.eu>
+ * Copyright (C) 2005-2022 MaNGOS <https://getmangos.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -197,7 +197,7 @@ class LootStore
 
 class LootTemplate
 {
-        class  LootGroup;                                   // A set of loot definitions for items (refs are not allowed inside)
+        class LootGroup;                                   // A set of loot definitions for items (refs are not allowed inside)
         typedef std::vector<LootGroup> LootGroups;
 
     public:
@@ -297,15 +297,21 @@ struct Loot
         void clear()
         {
             for (QuestItemMap::const_iterator itr = m_playerQuestItems.begin(); itr != m_playerQuestItems.end(); ++itr)
-                { delete itr->second; }
+            {
+                delete itr->second;
+            }
             m_playerQuestItems.clear();
 
             for (QuestItemMap::const_iterator itr = m_playerFFAItems.begin(); itr != m_playerFFAItems.end(); ++itr)
-                { delete itr->second; }
+            {
+                delete itr->second;
+            }
             m_playerFFAItems.clear();
 
             for (QuestItemMap::const_iterator itr = m_playerNonQuestNonFFAConditionalItems.begin(); itr != m_playerNonQuestNonFFAConditionalItems.end(); ++itr)
-                { delete itr->second; }
+            {
+                delete itr->second;
+            }
             m_playerNonQuestNonFFAConditionalItems.clear();
 
             m_playersLooting.clear();
@@ -324,7 +330,7 @@ struct Loot
         void NotifyMoneyRemoved();
         void AddLooter(ObjectGuid guid) { m_playersLooting.insert(guid); }
         void RemoveLooter(ObjectGuid guid) { m_playersLooting.erase(guid); }
-        
+
         /**
         * function IsWinner returns whether the player won at least one item during a roll.
         * \param player Pointer indicating the player who may have won a loot.
