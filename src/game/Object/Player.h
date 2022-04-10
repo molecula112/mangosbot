@@ -2360,6 +2360,7 @@ class Player : public Unit
         PlayerbotMgr* GetPlayerbotMgr() { return m_playerbotMgr; }
         void SetBotDeathTimer() { m_deathTimer = 0; }
         //PlayerTalentMap& GetTalentMap(uint8 spec) { return m_talents[spec]; }
+        std::list<Channel*> GetJoinedChannels() { return m_channels; }
 #endif
 
     protected:

@@ -12685,6 +12685,10 @@ void Player::RewardQuest(Quest const* pQuest, uint32 reward, Object* questGiver,
     saBounds = sSpellMgr.GetSpellAreaForAreaMapBounds(0);
     for (SpellAreaForAreaMap::const_iterator itr = saBounds.first; itr != saBounds.second; ++itr)
         { itr->second->ApplyOrRemoveSpellIfCan(this, zone, area, false); }
+
+#ifdef ENABLE_IMMERSIVE
+    sImmersive.OnRewardQuest(this, pQuest);
+#endif /* ENABLE_IMMERSIVE */
 }
 
 // TODO be more specific at callers about quest fail reason. Also, quest "fails" when either picking up or giving out is unsuccessful.

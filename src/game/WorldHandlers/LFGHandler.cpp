@@ -37,6 +37,9 @@
 #include "Group.h"
 #include "LFGHandler.h"
 #include "LFGMgr.h"
+#ifdef ENABLE_IMMERSIVE
+#include "immersive.h"
+#endif
 
 void WorldSession::HandleMeetingStoneJoinOpcode(WorldPacket& recv_data)
 {
@@ -88,6 +91,9 @@ void WorldSession::HandleMeetingStoneJoinOpcode(WorldPacket& recv_data)
    GameObjectInfo const* gInfo = ObjectMgr::GetGameObjectInfo(obj->GetEntry());
 
    sLFGMgr.AddToQueue(_player, gInfo->meetingstone.areaID);
+#ifdef ENABLE_IMMERSIVE
+    sImmersive.OnGoUse(_player, obj);
+#endif
 }
 
 void WorldSession::HandleMeetingStoneLeaveOpcode(WorldPacket& /*recv_data*/)
