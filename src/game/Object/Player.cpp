@@ -22952,6 +22952,9 @@ void Player::ModifyMoney(int32 d)
 #ifdef ENABLE_ELUNA
     sEluna->OnMoneyChanged(this, d);
 #endif /* ENABLE_ELUNA */
+#ifdef ENABLE_IMMERSIVE
+    sImmersive.OnModifyMoney(this, d);
+#endif /* ENABLE_IMMERSIVE */
 
     if (d < 0)
     {

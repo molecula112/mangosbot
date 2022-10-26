@@ -86,6 +86,9 @@
 #include "PlayerbotAIConfig.h"
 #include "RandomPlayerbotMgr.h"
 #endif
+#ifdef ENABLE_IMMERSIVE
+#include "immersive.h"
+#endif
 
 // WARDEN
 #include "WardenCheckMgr.h"
@@ -1478,6 +1481,10 @@ void World::SetInitialWorldSettings()
 
 #ifdef ENABLE_PLAYERBOTS
     sPlayerbotAIConfig.Initialize();
+#endif
+
+#ifdef ENABLE_IMMERSIVE
+    sImmersiveConfig.Initialize();
 #endif
 
     showFooter();
