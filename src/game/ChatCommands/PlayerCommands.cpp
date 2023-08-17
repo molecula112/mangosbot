@@ -28,6 +28,9 @@
 #include "AccountMgr.h"
 #include "ObjectMgr.h"
 #include "SQLStorages.h"
+#ifdef ENABLE_IMMERSIVE
+#include "immersive.h"
+#endif
 
 
 
@@ -2312,7 +2315,13 @@ bool ChatHandler::HandleModifyGenderCommand(char* args)
         return false;
     }
 
-    PlayerInfo const* info = sObjectMgr.GetPlayerInfo(player->getRace(), player->getClass());
+    PlayerInfo const* info =
+#ifdef ENABLE_IMMERSIVE
+            sImmersive.
+#else
+            sObjectMgr.
+#endif
+            GetPlayerInfo(player->getRace(), player->getClass());
     if (!info)
     {
         return false;

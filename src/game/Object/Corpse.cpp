@@ -29,6 +29,9 @@
 #include "Database/DatabaseEnv.h"
 #include "World.h"
 #include "ObjectMgr.h"
+#ifdef ENABLE_IMMERSIVE
+#include "immersive.h"
+#endif
 
 Corpse::Corpse(CorpseType type) : WorldObject(),
     loot(this),
@@ -201,7 +204,13 @@ bool Corpse::LoadFromDB(uint32 lowguid, Field* fields)
 
     SetObjectScale(DEFAULT_OBJECT_SCALE);
 
-    PlayerInfo const* info = sObjectMgr.GetPlayerInfo(race, _class);
+    PlayerInfo const* info =
+#ifdef ENABLE_IMMERSIVE
+            sImmersive.
+#else
+            sObjectMgr.
+#endif
+            GetPlayerInfo(race, _class);
     if (!info)
     {
         sLog.outError("Player %u has incorrect race/class pair.", GetGUIDLow());

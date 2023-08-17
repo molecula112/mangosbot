@@ -680,7 +680,13 @@ bool Player::Create(uint32 guidlow, const std::string& name, uint8 race, uint8 c
 
     m_name = name;
 
-    PlayerInfo const* info = sObjectMgr.GetPlayerInfo(race, class_);
+    PlayerInfo const* info =
+#ifdef ENABLE_IMMERSIVE
+            sImmersive.
+#else
+            sObjectMgr.
+#endif
+            GetPlayerInfo(race, class_);
     if (!info)
     {
         sLog.outError("Player have incorrect race/class pair. Can't be loaded.");
@@ -1608,7 +1614,13 @@ bool Player::BuildEnumData(QueryResult* result, WorldPacket* p_data)
     uint8 pRace = fields[2].GetUInt8();
     uint8 pClass = fields[3].GetUInt8();
 
-    PlayerInfo const* info = sObjectMgr.GetPlayerInfo(pRace, pClass);
+    PlayerInfo const* info =
+#ifdef ENABLE_IMMERSIVE
+            sImmersive.
+#else
+            sObjectMgr.
+#endif
+            GetPlayerInfo(pRace, pClass);
     if (!info)
     {
         sLog.outError("Player %u has incorrect race/class pair. Don't build enum.", guid);
@@ -16339,7 +16351,13 @@ bool Player::LoadFromDB(ObjectGuid guid, SqlQueryHolder* holder)
     SetByteValue(UNIT_FIELD_BYTES_2, 1, UNIT_BYTE2_FLAG_UNK3 | UNIT_BYTE2_FLAG_UNK5);
 
     // check if race/class combination is valid
-    PlayerInfo const* info = sObjectMgr.GetPlayerInfo(getRace(), getClass());
+    PlayerInfo const* info =
+#ifdef ENABLE_IMMERSIVE
+            sImmersive.
+#else
+            sObjectMgr.
+#endif
+            GetPlayerInfo(getRace(), getClass());
     if (!info)
     {
         DEBUG_FILTER_LOG(LOG_FILTER_PLAYER_STATS, "Player (GUID: %u) has wrong race/class (%u/%u), can't be loaded.",
@@ -18016,7 +18034,13 @@ void Player::ConvertInstancesToGroup(Player* player, Group* group, ObjectGuid pl
 
 bool Player::_LoadHomeBind(QueryResult* result)
 {
-    PlayerInfo const* info = sObjectMgr.GetPlayerInfo(getRace(), getClass());
+    PlayerInfo const* info =
+#ifdef ENABLE_IMMERSIVE
+            sImmersive.
+#else
+            sObjectMgr.
+#endif
+            GetPlayerInfo(getRace(), getClass());
     if (!info)
     {
         sLog.outError("Player have incorrect race/class pair. Can't be loaded.");
@@ -20144,7 +20168,13 @@ void Player::InitDataForForm(bool reapplyMods)
 
 void Player::InitDisplayIds()
 {
-    PlayerInfo const* info = sObjectMgr.GetPlayerInfo(getRace(), getClass());
+    PlayerInfo const* info =
+#ifdef ENABLE_IMMERSIVE
+            sImmersive.
+#else
+            sObjectMgr.
+#endif
+            GetPlayerInfo(getRace(), getClass());
     if (!info)
     {
         sLog.outError("Player %u has incorrect race/class pair. Can't init display ids.", GetGUIDLow());
@@ -21173,7 +21203,13 @@ void Player::resetSpells()
 void Player::learnDefaultSpells()
 {
     // learn default race/class spells
-    PlayerInfo const* info = sObjectMgr.GetPlayerInfo(getRace(), getClass());
+    PlayerInfo const* info =
+#ifdef ENABLE_IMMERSIVE
+            sImmersive.
+#else
+            sObjectMgr.
+#endif
+            GetPlayerInfo(getRace(), getClass());
     for (PlayerCreateInfoSpells::const_iterator itr = info->spell.begin(); itr != info->spell.end(); ++itr)
     {
         uint32 tspell = *itr;
