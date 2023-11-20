@@ -698,6 +698,9 @@ class ChatHandler
         bool HandleGuildTaskCommand(char* args);
         bool HandlePerfMonCommand(char* args);
 #endif
+#ifdef ENABLE_IMMERSIVE
+        bool HandleImmersiveCommand(char* args);
+#endif
 
         //! Development Commands
         bool HandleSaveAllCommand(char* args);

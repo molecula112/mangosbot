@@ -816,6 +816,9 @@ ChatCommand* ChatHandler::getCommandTable()
         { "gtask",            SEC_GAMEMASTER,    true,  &ChatHandler::HandleGuildTaskCommand,           "", NULL },
         { "pmon",             SEC_GAMEMASTER,    true,  &ChatHandler::HandlePerfMonCommand,           "", NULL },
 #endif
+#ifdef ENABLE_IMMERSIVE
+        { "immersive",        SEC_PLAYER,        false, &ChatHandler::HandleImmersiveCommand,               "", NULL },
+#endif
 
         { NULL,             0,                  false, NULL,                                           "", NULL }
     };
